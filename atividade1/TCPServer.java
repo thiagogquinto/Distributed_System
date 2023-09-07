@@ -19,16 +19,14 @@ public class TCPServer {
             /* cria um socket e mapeia a porta para aguardar conexao */
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
-            ExecutorService executorService = Executors.newFixedThreadPool(100); // cria um pool de threads para lidar
-                                                                                 // com múltiplos clientes
+            /* cria um pool de threads para lidar com vários clientes */
+            ExecutorService executorService = Executors.newFixedThreadPool(100);
 
             while (true) {
                 System.out.println("Servidor aguardando conexao ...");
 
                 /* aguarda conexoes */
                 Socket clientSocket = listenSocket.accept();
-
-                System.out.println("Cliente conectado ... Criando thread ...");
 
                 /* cria um thread para atender a conexao */
                 ClientThread c = new ClientThread(clientSocket);
@@ -74,7 +72,6 @@ class ClientThread extends Thread {
 
                 if (buffer.startsWith("CONNECT")) {
                     String[] bufferArray = buffer.split(" ");
-
                     String user = bufferArray[1].replace(",", "");
                     String password = bufferArray[2];
 
@@ -83,9 +80,25 @@ class ClientThread extends Thread {
                     } else {
                         buffer = "ERROR";
                     }
-
+                } else if (buffer.equals("PWD")){
+                    buffer = System.getProperty("user.dir");
+                } else if(buffer.startsWith("CHDIR")){
+                    String[] bufferArray = buffer.split(" ");
+                    if(bufferArray.length != 2){
+                        buffer = "ERROR - Comando inválido";
+                    } else if(bufferArray[0] != "CHDIR"){
+                        buffer = "ERROR - Comando inválido";
+                    } else {
+                        String path = bufferArray[1];
+                        File file = new File(path);
+                        if(file.exists()){
+                            System.setProperty("user.dir", path);
+                            buffer = "SUCCESS";
+                        } else {
+                            buffer = "ERROR - Diretório não encontrado";
+                        }
+                    }
                 }
-                // buffer = "";
                 out.writeUTF(buffer);
             }
         } catch (EOFException eofe) {

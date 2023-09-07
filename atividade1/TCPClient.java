@@ -11,6 +11,7 @@ public class TCPClient {
     public static void main(String args[]) {
         Socket clientSocket = null; // socket do cliente
         Scanner reader = new Scanner(System.in); // ler mensagens via teclado
+        boolean isAuthenticated = false;
 
         try {
             /* Endereço e porta do servidor */
@@ -27,37 +28,38 @@ public class TCPClient {
             /* protocolo de comunicação */
             String buffer = "";
             while (true) {
-                System.out.print("Insira seu usuário e senha no seguinte formato: CONNECT user, password\n");
-                
+                System.out.print("$ ");
                 buffer = reader.nextLine(); // lê mensagem via teclado
 
-                System.out.println("Enviando mensagem para o servidor: " + buffer);
+                if (!isAuthenticated) {
+                    if (buffer.startsWith("CONNECT")) {
+                        String[] bufferArray = buffer.split(" ");
+                        String hash = generateHashString(bufferArray[2]);
+                        buffer = bufferArray[0] + " " + bufferArray[1] + " " + hash;
+                        out.writeUTF(buffer); // envia a mensagem para o servidor
 
-                String[] bufferArray = buffer.split(" ");
-                System.out.println("Cliente disse: " + bufferArray[0] + " " + bufferArray[1] + " " + bufferArray[2]);
-                String hash = generateHashString(bufferArray[2]);
+                        buffer = in.readUTF(); // aguarda resposta do servidor
 
-                System.out.println("Hash gerado: " + hash);
-
-                buffer = bufferArray[0] + " " + bufferArray[1] + " " + hash;
-
-                out.writeUTF(buffer); // envia a mensagem para o servidor
-
-                if (buffer.equals("EXIT"))
-                    break;
-
-                buffer = in.readUTF(); // aguarda resposta do servidor
-
-                if (buffer.equals("ERROR")) {
-                    System.out.println("Usuário e senha não encontrados, deixando o sistema...");
-                    break;
+                        if (buffer.equals("SUCCESS")) {
+                            isAuthenticated = true;
+                        } else {
+                            System.out.println("Falha na autenticação");
+                        }
+                    } else {
+                        System.out.println("Você precisa se autenticar para executar essa ação");
+                    }
                 } else {
-                    System.out.println("Entrando no sistema...");
-                }
+                    out.writeUTF(buffer); // envia a mensagem para o servidor
 
-                // System.out.println("Server disse: " + buffer);
+                    if (buffer.equals("EXIT")) {
+                        break;
+                    }
+                    buffer = in.readUTF(); // aguarda resposta do servidor
+                    System.out.println(buffer); // imprime resposta do servidor
+                }
             }
-        } catch (UnknownHostException ue) {
+        } catch (
+        UnknownHostException ue) {
             System.out.println("Socket:" + ue.getMessage());
         } catch (EOFException eofe) {
             System.out.println("EOF:" + eofe.getMessage());
@@ -71,8 +73,8 @@ public class TCPClient {
                 ;
             }
         }
+
     } // main
-    
 
     private static String generateHashString(String password) {
         try {
