@@ -78,35 +78,13 @@ class ClientThread extends Thread {
                     String user = bufferArray[1].replace(",", "");
                     String password = bufferArray[2];
 
-                    System.out.println("Diretório de Trabalho Atual: " + System.getProperty("user.dir"));
-
-
-                    File file = new File("./atividade1/users.txt");
-                    Scanner scanner = new Scanner(file);
-                    Boolean userFound = false;
-
-                    while (scanner.hasNextLine()) {
-                        String line = scanner.nextLine();
-                        String[] lineArray = line.split(":");
-
-                        if (lineArray[0].equals(user) && lineArray[1].equals(password)) {
-                            System.out.println("Usuário e senha encontrados");
-                            userFound = true;
-                            buffer = "OK";
-                            break;
-                        }
-                    }
-
-                    if (!userFound) {
-                        System.out.println("Usuário e senha não encontrados");
+                    if (authenticate(user, password)) {
+                        buffer = "SUCCESS";
+                    } else {
                         buffer = "ERROR";
                     }
+
                 }
-
-                // System.out.println("Cliente disse: " + buffer);
-
-                // if (buffer.equals("PARAR")) break;
-
                 // buffer = "";
                 out.writeUTF(buffer);
             }
@@ -125,5 +103,31 @@ class ClientThread extends Thread {
         }
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
+
+    private boolean authenticate(String user, String password) {
+        File file = new File("./atividade1/users.txt");
+        Scanner scanner = null;
+
+        try {
+            scanner = new Scanner(file);
+
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String[] lineArray = line.split(":");
+
+                if (lineArray[0].equals(user) && lineArray[1].equals(password)) {
+                    System.out.println("Usuário e senha encontrados");
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            scanner.close();
+        }
+        return false;
+    }
 
 } // class
