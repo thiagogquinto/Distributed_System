@@ -26,9 +26,10 @@ public class TCPClient {
             DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 
             /* protocolo de comunicação */
+            String username = "";
             String buffer = "";
             while (true) {
-                System.out.print("$ ");
+                System.out.print(username + "$ ");
                 buffer = reader.nextLine(); // lê mensagem via teclado
 
                 if (!isAuthenticated) {
@@ -42,6 +43,7 @@ public class TCPClient {
 
                         if (buffer.equals("SUCCESS")) {
                             isAuthenticated = true;
+                            username = bufferArray[1].replace(",", "");
                         } else {
                             System.out.println("Falha na autenticação");
                         }
