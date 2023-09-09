@@ -111,13 +111,18 @@ class ClientThread extends Thread {
                             String[] pathSegments = path.split("/");
 
                             for (String segment : pathSegments) {
-                                
-                                if (segment.equals("..")) {
+                                if (segment.equals("..") || segment.equals("../")) {
                                     currentDirectory = currentDirectory.substring(0, currentDirectory.lastIndexOf("/"));
                                     currentDirFile = new File(currentDirectory);
                                 } else {
                                     currentDirFile = new File(currentDirFile, segment);
                                 }
+                            }
+                            if (currentDirFile.exists() && currentDirFile.isDirectory()) {
+                                currentDirectory = currentDirFile.getAbsolutePath();
+                                buffer = "SUCCESS";
+                            } else {
+                                buffer = "ERROR - Diretório não encontrado";
                             }
                         }
                     }
@@ -157,7 +162,7 @@ class ClientThread extends Thread {
     } // run
 
     private boolean authenticate(String user, String password) {
-        File file = new File("./atividade1/users.txt");
+        File file = new File("./atividade1/users.txt"); // arquivo de usuarios e senhas "registrados" no servidor
         Scanner scanner = null;
 
         try {
