@@ -77,38 +77,63 @@ class ClientThread extends Thread {
                     } else {
                         buffer = "ERROR";
                     }
-                } else if (buffer.equals("PWD")){
+                } else if (buffer.equals("PWD")) {
                     buffer = currentDirectory;
-                } else if(buffer.startsWith("CHDIR")){
+                } else if (buffer.startsWith("CHDIR")) {
                     String[] bufferArray = buffer.split(" ");
-                    if(bufferArray.length != 2){
+                    if (bufferArray.length != 2) {
                         buffer = "ERROR - Comando inválido";
-                    } else if(!bufferArray[0].equals("CHDIR")){
+                    } else if (!bufferArray[0].equals("CHDIR")) {
                         System.out.println(bufferArray[0]);
                         buffer = "ERROR - Comando inválido";
                     } else {
-                        String path = bufferArray[1];
-                        File file = new File(path);
-                        if(file.exists() && file.isDirectory()){
-                            currentDirectory = path;
-                            buffer = "SUCCESS";
+                        if (bufferArray[1].split("/").length == 1 || !bufferArray[1].contains("/")) {
+                            String path = bufferArray[1];
+                            File file = new File(path);
+
+                            if (bufferArray[1].equals("..")) {
+                                path = currentDirectory.substring(0, currentDirectory.lastIndexOf("/"));
+                                file = new File(path);
+                            } else {
+                                file = new File(currentDirectory, path);
+                                path = currentDirectory + "/" + path;
+                            }
+
+                            if (file.exists() && file.isDirectory()) {
+                                currentDirectory = path;
+                                buffer = "SUCCESS";
+                            } else {
+                                buffer = "ERROR - Diretório não encontrado";
+                            }
                         } else {
-                            buffer = "ERROR - Diretório não encontrado";
+                            String path = bufferArray[1];
+                            File currentDirFile = new File(currentDirectory);
+                            String[] pathSegments = path.split("/");
+
+                            for (String segment : pathSegments) {
+                                
+                                if (segment.equals("..")) {
+                                    currentDirectory = currentDirectory.substring(0, currentDirectory.lastIndexOf("/"));
+                                    currentDirFile = new File(currentDirectory);
+                                } else {
+                                    currentDirFile = new File(currentDirFile, segment);
+                                }
+                            }
                         }
                     }
-                } else if (buffer.equals("GETFILES")){
+                } else if (buffer.equals("GETFILES")) {
                     File file = new File(currentDirectory);
                     File[] files = file.listFiles();
                     buffer = "";
-                    for(File f : files){
+                    for (File f : files) {
                         if (f.isFile())
                             buffer += f.getName() + "\n";
                     }
-                } else if (buffer.equals("GETDIRS")){
+                } else if (buffer.equals("GETDIRS")) {
                     File file = new File(currentDirectory);
                     File[] files = file.listFiles();
                     buffer = "";
-                    for(File f : files){
+                    for (File f : files) {
                         if (f.isDirectory())
                             buffer += f.getName() + "\n";
                     }
