@@ -6,8 +6,6 @@ package atividade1;
  */
 import java.net.*;
 import java.io.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.Scanner;
 
 public class TCPServer {
@@ -19,11 +17,8 @@ public class TCPServer {
             /* cria um socket e mapeia a porta para aguardar conexao */
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
-            /* cria um pool de threads para lidar com vários clientes */
-            ExecutorService executorService = Executors.newFixedThreadPool(100);
-
+            System.out.println("Servidor aguardando conexao ...");
             while (true) {
-                System.out.println("Servidor aguardando conexao ...");
 
                 /* aguarda conexoes */
                 Socket clientSocket = listenSocket.accept();
@@ -31,8 +26,9 @@ public class TCPServer {
                 /* cria um thread para atender a conexao */
                 ClientThread c = new ClientThread(clientSocket);
 
+                c.start();
+
                 /* inicializa a thread */
-                executorService.submit(c);
             } // while
 
         } catch (IOException e) {
