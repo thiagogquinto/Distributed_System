@@ -47,6 +47,7 @@ class ClientThread extends Thread {
     DataInputStream in;
     DataOutputStream out;
     Socket clientSocket;
+    private String currentDirectory = System.getProperty("user.dir");
 
     public ClientThread(Socket clientSocket) {
         try {
@@ -77,22 +78,39 @@ class ClientThread extends Thread {
                         buffer = "ERROR";
                     }
                 } else if (buffer.equals("PWD")){
-                    buffer = System.getProperty("user.dir");
+                    buffer = currentDirectory;
                 } else if(buffer.startsWith("CHDIR")){
                     String[] bufferArray = buffer.split(" ");
                     if(bufferArray.length != 2){
                         buffer = "ERROR - Comando inválido";
-                    } else if(bufferArray[0] != "CHDIR"){
+                    } else if(!bufferArray[0].equals("CHDIR")){
+                        System.out.println(bufferArray[0]);
                         buffer = "ERROR - Comando inválido";
                     } else {
                         String path = bufferArray[1];
                         File file = new File(path);
-                        if(file.exists()){
-                            System.setProperty("user.dir", path);
+                        if(file.exists() && file.isDirectory()){
+                            currentDirectory = path;
                             buffer = "SUCCESS";
                         } else {
                             buffer = "ERROR - Diretório não encontrado";
                         }
+                    }
+                } else if (buffer.equals("GETFILES")){
+                    File file = new File(currentDirectory);
+                    File[] files = file.listFiles();
+                    buffer = "";
+                    for(File f : files){
+                        if (f.isFile())
+                            buffer += f.getName() + "\n";
+                    }
+                } else if (buffer.equals("GETDIRS")){
+                    File file = new File(currentDirectory);
+                    File[] files = file.listFiles();
+                    buffer = "";
+                    for(File f : files){
+                        if (f.isDirectory())
+                            buffer += f.getName() + "\n";
                     }
                 }
                 out.writeUTF(buffer);
@@ -119,17 +137,14 @@ class ClientThread extends Thread {
 
         try {
             scanner = new Scanner(file);
-
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String[] lineArray = line.split(":");
 
                 if (lineArray[0].equals(user) && lineArray[1].equals(password)) {
-                    System.out.println("Usuário e senha encontrados");
                     return true;
                 }
             }
-
             return false;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -138,5 +153,4 @@ class ClientThread extends Thread {
         }
         return false;
     }
-
 } // class
