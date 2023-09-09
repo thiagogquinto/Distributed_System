@@ -9,8 +9,8 @@ import java.io.*;
 import java.util.Scanner;
 
 public class TCPServer {
-
     public static void main(String args[]) {
+
         try {
             int serverPort = 6666; // porta do servidor
 
@@ -82,10 +82,10 @@ class ClientThread extends Thread {
                 } else if (buffer.startsWith("CHDIR")) {
                     String[] bufferArray = buffer.split(" ");
                     if (bufferArray.length != 2) {
-                        buffer = "ERROR - Comando inválido";
+                        buffer = "ERROR";
                     } else if (!bufferArray[0].equals("CHDIR")) {
                         System.out.println(bufferArray[0]);
-                        buffer = "ERROR - Comando inválido";
+                        buffer = "ERROR";
                     } else {
                         if (bufferArray[1].split("/").length == 1 || !bufferArray[1].contains("/")) {
                             String path = bufferArray[1];
@@ -103,7 +103,7 @@ class ClientThread extends Thread {
                                 currentDirectory = path;
                                 buffer = "SUCCESS";
                             } else {
-                                buffer = "ERROR - Diretório não encontrado";
+                                buffer = "ERROR";
                             }
                         } else {
                             String path = bufferArray[1];
@@ -122,26 +122,37 @@ class ClientThread extends Thread {
                                 currentDirectory = currentDirFile.getAbsolutePath();
                                 buffer = "SUCCESS";
                             } else {
-                                buffer = "ERROR - Diretório não encontrado";
+                                buffer = "ERROR";
                             }
                         }
                     }
                 } else if (buffer.equals("GETFILES")) {
                     File file = new File(currentDirectory);
                     File[] files = file.listFiles();
-                    buffer = "";
+                    Integer filesCount = 0;
+                    String filesNames = "";
                     for (File f : files) {
-                        if (f.isFile())
-                            buffer += f.getName() + "\n";
+                        if (f.isFile()) {
+                            filesCount++;
+                            filesNames += f.getName() + "\n";
+                        }
                     }
+
+                    buffer = filesCount + "\n" + filesNames;
+
                 } else if (buffer.equals("GETDIRS")) {
                     File file = new File(currentDirectory);
                     File[] files = file.listFiles();
-                    buffer = "";
+                    Integer dirsCount = 0;
+                    String dirsNames = "";
                     for (File f : files) {
-                        if (f.isDirectory())
-                            buffer += f.getName() + "\n";
+                        if (f.isDirectory()) {
+                            dirsCount++;
+                            dirsNames += f.getName() + "\n";
+                        }
                     }
+
+                    buffer = dirsCount + "\n" + dirsNames;
                 }
                 out.writeUTF(buffer);
             }
@@ -171,11 +182,11 @@ class ClientThread extends Thread {
                 String line = scanner.nextLine();
                 String[] lineArray = line.split(":");
 
-                if (lineArray[0].equals(user) && lineArray[1].equals(password)) {
-                    return true;
+                if (lineArray[0].equals(user) && lineArray[1].equals(password)){
+                    return true; // sucesso
                 }
             }
-            return false;
+            return false; // usuário ou senha inválidos 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {

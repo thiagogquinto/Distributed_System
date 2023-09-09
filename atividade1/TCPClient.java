@@ -38,14 +38,12 @@ public class TCPClient {
                         String hash = generateHashString(bufferArray[2]);
                         buffer = bufferArray[0] + " " + bufferArray[1] + " " + hash;
                         out.writeUTF(buffer); // envia a mensagem para o servidor
-
                         buffer = in.readUTF(); // aguarda resposta do servidor
-
                         if (buffer.equals("SUCCESS")) {
                             isAuthenticated = true;
                             username = bufferArray[1].replace(",", "");
                         } else {
-                            System.out.println("Falha na autenticação");
+                            System.out.println(buffer);
                         }
                     } else {
                         System.out.println("Você precisa se autenticar para executar essa ação");
