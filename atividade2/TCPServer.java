@@ -10,6 +10,8 @@ import java.util.Scanner;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.nio.charset.StandardCharsets;
+
 
 public class TCPServer {
     public static void main(String args[]) {
@@ -50,7 +52,7 @@ class ClientThread extends Thread {
     DataInputStream in;
     DataOutputStream out;
     Socket clientSocket;
-
+  
     public ClientThread(Socket clientSocket) {
         try {
             this.clientSocket = clientSocket;
@@ -67,7 +69,27 @@ class ClientThread extends Thread {
         try {
             String buffer = "";
             while (true) {
-                buffer = in.readUTF(); /* aguarda o envio de dados */                
+
+                byte messageType = in.readByte(); // Lê o tipo de mensagem (1 byte)
+                byte commandId = in.readByte(); // Lê o código do comando (1 byte)
+                byte filenameSize = in.readByte(); // Lê o tamanho do nome do arquivo (1 byte)
+                byte[] filenameBytes = new byte[filenameSize];
+                in.readFully(filenameBytes); // Lê os bytes do nome do a
+                String filename = new String(filenameBytes, StandardCharsets.UTF_8);
+
+                if (messageType == 1) { // verifica se é uma requisição
+                    if (commandId == 1) {
+                        handleAddFile();
+                    } else if (commandId == 2) {
+                        handleDelete();
+                    } else if (commandId == 3) {
+                        handleGetFilesList();
+                    } else if (commandId == 4) {
+                        handleFetFile();
+                    }
+
+                }
+
                 out.writeUTF(buffer);
             }
         } catch (EOFException eofe) {
@@ -85,4 +107,21 @@ class ClientThread extends Thread {
         }
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
+
+    private void handleAddFile() {
+
+    }
+
+    private void handleDelete() {
+
+    }
+
+    private void handleGetFilesList() {
+
+    }
+
+    private void handleFetFile() {
+
+    }
+
 } // class
