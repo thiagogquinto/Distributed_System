@@ -22,6 +22,15 @@ public class TCPServer {
             /* cria um socket e mapeia a porta para aguardar conexao */
             ServerSocket listenSocket = new ServerSocket(serverPort);
 
+            // cria um arquivo de log para o servidor
+
+            FileHandler fh = new FileHandler("server.log"); // cria um arquivo de log
+            Logger logger = Logger.getLogger("server.log"); // cria um logger
+            logger.addHandler(fh); // adiciona o arquivo de log ao logger
+            SimpleFormatter formatter = new SimpleFormatter(); // cria um formatador
+            fh.setFormatter(formatter); // adiciona o formatador ao arquivo de log
+
+
             System.out.println("Servidor aguardando conexao ...");
             while (true) {
 
@@ -52,7 +61,8 @@ class ClientThread extends Thread {
     DataInputStream in;
     DataOutputStream out;
     Socket clientSocket;
-  
+    String generalPath = System.getProperty("user.dir") + "/files/";
+
     public ClientThread(Socket clientSocket) {
         try {
             this.clientSocket = clientSocket;
@@ -70,22 +80,22 @@ class ClientThread extends Thread {
             String buffer = "";
             while (true) {
 
-                byte messageType = in.readByte(); // Lê o tipo de mensagem (1 byte)
-                byte commandId = in.readByte(); // Lê o código do comando (1 byte)
-                byte filenameSize = in.readByte(); // Lê o tamanho do nome do arquivo (1 byte)
-                byte[] filenameBytes = new byte[filenameSize];
-                in.readFully(filenameBytes); // Lê os bytes do nome do a
-                String filename = new String(filenameBytes, StandardCharsets.UTF_8);
+                byte messageType = in.readByte(); // tipo de mensagem (1 byte)
+                byte commandId = in.readByte(); // código do comando (1 byte)
+                byte filenameSize = in.readByte(); // tamanho do nome do arquivo (1 byte)
+                byte[] filenameBytes = new byte[filenameSize]; // array de bytes para o nome do arquivo
+                in.readFully(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
+                String string = new String(filenameBytes); // Converte o nome do arquivo para String
+                
+                Logger logger = Logger.getLogger("server.log"); // pegar o logger
 
                 if (messageType == 1) { // verifica se é uma requisição
+                    logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize + " | Nome: " + string);
+
                     if (commandId == 1) {
-                        handleAddFile();
                     } else if (commandId == 2) {
-                        handleDelete();
                     } else if (commandId == 3) {
-                        handleGetFilesList();
                     } else if (commandId == 4) {
-                        handleFetFile();
                     }
 
                 }
@@ -109,19 +119,15 @@ class ClientThread extends Thread {
     } // run
 
     private void handleAddFile() {
-
     }
 
     private void handleDelete() {
-
     }
 
     private void handleGetFilesList() {
-
     }
 
     private void handleFetFile() {
-
     }
 
 } // class
