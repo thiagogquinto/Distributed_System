@@ -11,7 +11,6 @@ public class TCPClient {
     public static void main(String args[]) {
         Socket clientSocket = null; // socket do cliente
         Scanner reader = new Scanner(System.in); // ler mensagens via teclado
-        boolean isAuthenticated = false;
 
         try {
             /* Endereço e porta do servidor */
@@ -60,7 +59,7 @@ public class TCPClient {
                 clientSocket.close();
             } catch (IOException ioe) {
                 System.out.println("IO: " + ioe);
-                ;
+                
             }
         }
 
