@@ -103,7 +103,9 @@ class ClientThread extends Thread {
                     if (commandId == 1) {
                         handleAddFile(filename);
                     } else if (commandId == 2) {
+                        handleDelete(filename);
                     } else if (commandId == 3) {
+                        handleGetFilesList();
                     } else if (commandId == 4) {
                     }
 
@@ -166,10 +168,21 @@ class ClientThread extends Thread {
     }
 
 
-    private void handleDelete() {
+    private void handleDelete(String filename) {
+
+        Logger logger = Logger.getLogger("server.log"); // pegar o logger
+        File file = new File(serverPath + "/" + filename);
+        if (file.delete()) {
+           logger.info("Arquivo " + filename + " deletado com sucesso");
+        } else {
+            logger.info("Erro ao deletar arquivo " + filename);
+        }
+
     }
 
     private void handleGetFilesList() {
+    
+        
     }
 
     private void handleFetFile() {
