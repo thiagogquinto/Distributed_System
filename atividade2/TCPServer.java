@@ -4,19 +4,17 @@ package atividade2;
  * TCPServer: Servidor para conexao TCP com Threads Descricao: Recebe uma
  * conexao, cria uma thread, recebe uma mensagem e finaliza a conexao
  */
-import java.net.*;
 import java.io.*;
-import java.util.Scanner;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.nio.charset.StandardCharsets;
+import java.net.*;
+import java.util.logging.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
-import java.io.FileReader;
-import java.io.FileWriter;
-
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 public class TCPServer {
+
     public static void main(String args[]) {
 
         try {
@@ -39,16 +37,18 @@ public class TCPServer {
                 /* aguarda conexoes */
                 Socket clientSocket = listenSocket.accept();
 
+                /* cliente conectado */
                 /* cria um thread para atender a conexao */
                 ClientThread c = new ClientThread(clientSocket);
 
+                /* inicializa a thread */
                 c.start();
 
-                /* inicializa a thread */
             } // while
 
         } catch (IOException e) {
             System.out.println("Listen socket:" + e.getMessage());
+
         } // catch
     } // main
 } // class
@@ -58,23 +58,28 @@ public class TCPServer {
  * Descricao: Rebebe um socket, cria os objetos de leitura e escrita,
  * aguarda msgs clientes e responde com a msg + :OK
  */
+
 class ClientThread extends Thread {
 
     DataInputStream in;
     DataOutputStream out;
     Socket clientSocket;
+
     String serverPath = System.getProperty("user.dir") + "/files/";
     String localPath = System.getProperty("user.dir");
 
     public ClientThread(Socket clientSocket) {
         try {
             this.clientSocket = clientSocket;
+
             in = new DataInputStream(clientSocket.getInputStream());
             out = new DataOutputStream(clientSocket.getOutputStream());
+
             File directory = new File(serverPath);
             if (!directory.exists()) {
                 directory.mkdir();
             }
+
         } catch (IOException ioe) {
             System.out.println("Connection:" + ioe.getMessage());
         } // catch
@@ -84,8 +89,10 @@ class ClientThread extends Thread {
     @Override
     public void run() {
         try {
-            String buffer = "";
+
             while (true) {
+
+                String buffer = "";
 
                 byte messageType = in.readByte(); // tipo de mensagem (1 byte)
                 byte commandId = in.readByte(); // código do comando (1 byte)
@@ -97,21 +104,25 @@ class ClientThread extends Thread {
                 Logger logger = Logger.getLogger("server.log"); // pegar o logger
 
                 if (messageType == 1) { // verifica se é uma requisição
+
                     logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize
                             + " | Arquivo: " + filename);
 
                     if (commandId == 1) {
                         handleAddFile(filename);
+
                     } else if (commandId == 2) {
                         handleDelete(filename);
+
                     } else if (commandId == 3) {
-                        handleGetFilesList();
+                        buffer = handleGetFilesList();
+
                     } else if (commandId == 4) {
+                        handleGetFile(filename);
                     }
 
                 }
 
-                out.writeUTF(buffer);
             }
         } catch (EOFException eofe) {
             System.out.println("EOF: " + eofe.getMessage());
@@ -129,8 +140,9 @@ class ClientThread extends Thread {
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
 
-   private void handleAddFile(String filename) {
-        Logger logger = Logger.getLogger("server.log"); // pegar o logger
+    private void handleAddFile(String filename) throws IOException {
+        Logger logger = Logger.getLogger("server.log");
+
         File srcFile = new File(localPath + "/" + filename);
         File destFile = new File(serverPath + "/" + filename);
 
@@ -141,51 +153,85 @@ class ClientThread extends Thread {
             fis = new FileInputStream(srcFile);
             fos = new FileOutputStream(destFile);
 
-             int c;
- 
+            int c;
+
             while ((c = fis.read()) != -1) {
                 fos.write(c);
             }
 
-            logger.info("Arquivo " + filename + " copiado com sucesso");
- 
+            logger.info("Arquivo " + filename + " copiado com sucesso\n");
+            logger.info("Enviando resposta para o cliente");
+            sendResponse(out, (byte) 1, (byte) 1);
+
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
             e.printStackTrace();
+            logger.info("Enviando resposta para o cliente");
+            sendResponse(out, (byte) 1, (byte) 2);
+
         } finally {
             try {
                 if (fis != null) {
                     fis.close();
                 }
- 
+
                 if (fos != null) {
                     fos.close();
                 }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-
-    private void handleDelete(String filename) {
+    private void handleDelete(String filename) throws IOException {
 
         Logger logger = Logger.getLogger("server.log"); // pegar o logger
         File file = new File(serverPath + "/" + filename);
         if (file.delete()) {
-           logger.info("Arquivo " + filename + " deletado com sucesso");
+            logger.info("Arquivo " + filename + " deletado com sucesso\n");
+            sendResponse(out, (byte) 1, (byte) 1);
         } else {
-            logger.info("Erro ao deletar arquivo " + filename);
+            logger.info("Erro ao deletar arquivo " + filename + "\n");
+            sendResponse(out, (byte) 1, (byte) 2);
         }
 
     }
 
-    private void handleGetFilesList() {
-    
-        
+    private String handleGetFilesList() {
+        // Listar os arquivos no diretório de destino (no servidor)
+        File file = new File(serverPath);
+        File[] files = file.listFiles();
+        Integer filesCount = 0;
+        String filesNames = "";
+        for (File f : files) {
+            if (f.isFile()) {
+                filesCount++;
+                filesNames += f.getName() + "\n";
+            }
+        }
+
+        return filesNames;
     }
 
-    private void handleFetFile() {
+    private void handleGetFile(String filename) {
+        System.out.println(filename);
     }
 
+    private static ByteBuffer sendResponse(DataOutputStream out, byte command, byte status) throws IOException {
+
+        byte[] bytes = new byte[259];
+        ByteBuffer header = ByteBuffer.allocate(258);
+        header.order(ByteOrder.BIG_ENDIAN);
+        header.put((byte) 2);
+        header.put(command);
+        header.put(status);
+        bytes = header.array();
+        int size = header.limit();
+        out.write(bytes, 0, size);
+        out.flush();
+
+        return header;
+    }
 } // class

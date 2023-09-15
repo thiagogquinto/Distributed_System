@@ -1,16 +1,16 @@
 package atividade2;
 
-import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.io.*;
+import java.net.*;
 import java.util.Scanner;
+import java.nio.ByteOrder;
+import java.nio.ByteBuffer;
 
 public class TCPClient {
+    
     public static void main(String args[]) {
-        Socket clientSocket = null; // socket do cliente
-        Scanner reader = new Scanner(System.in); // ler mensagens via teclado
+        Socket clientSocket = null;               // socket do cliente
+        Scanner reader = new Scanner(System.in);  // ler mensagens via teclado
 
         try {
             /* Endereço e porta do servidor */
@@ -26,28 +26,40 @@ public class TCPClient {
 
             /* protocolo de comunicação */
             String buffer = "";
+
             while (true) {
 
                 System.out.print("$ ");
                 buffer = reader.nextLine(); // lê mensagem via teclado
+
                 String[] infos = buffer.split(" ");
 
                 if (infos[0].equals("ADDFILE") && infos.length == 2) {
                     sendRequest(out, (byte) 1, infos[1]);
+
                 } else if (infos[0].equals("DELETE") && infos.length == 2) {
                     sendRequest(out, (byte) 2, infos[1]);
+
                 } else if (infos[0].equals("GETFILESLIST") && infos.length == 1) {
                     sendRequest(out, (byte) 3, "");
+
                 } else if (infos[0].equals("GETFILE") && infos.length == 2) {
                     sendRequest(out, (byte) 4, infos[1]);
+
                 } else {
                     System.out.println("Comando inválido");
                 }
 
                 out.writeUTF(buffer); // envia a mensagem para o servidor
+                out.flush();
+
                 buffer = in.readUTF(); // aguarda resposta do servidor
+
+
                 System.out.println(buffer); // imprime resposta do servidor
             }
+
+
         } catch (UnknownHostException ue) {
             System.out.println("Socket:" + ue.getMessage());
         } catch (EOFException eofe) {
@@ -76,7 +88,6 @@ public class TCPClient {
     }
 
     private static void sendRequest(DataOutputStream out, byte command, String filename) throws IOException {
-
         byte[] filenameBytes = filename.getBytes();
         ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filenameBytes);
         out.write(header.array());
