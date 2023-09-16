@@ -9,11 +9,16 @@ import java.net.*;
 import java.util.logging.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
+import java.io.File;
+import java.nio.file.Files;
 
 public class TCPServer {
+
+    public static Logger logger = Logger.getLogger("server.log");
+
+    public static Logger getLogger() {
+        return logger;
+    }
 
     public static void main(String args[]) {
 
@@ -26,7 +31,7 @@ public class TCPServer {
             /* cria um arquivo de log para o servidor */
 
             FileHandler fh = new FileHandler("server.log"); // cria um arquivo de log
-            Logger logger = Logger.getLogger("server.log"); // cria um logger
+            // Logger logger = Logger.getLogger("server.log"); // cria um logger
             logger.addHandler(fh); // adiciona o arquivo de log ao logger
             SimpleFormatter formatter = new SimpleFormatter(); // cria um formatador
             fh.setFormatter(formatter); // adiciona o formatador ao arquivo de log
@@ -92,21 +97,31 @@ class ClientThread extends Thread {
         try {
 
             while (true) {
+
                 String buffer = "";
 
-                byte messageType = in.readByte(); // tipo de mensagem (1 byte)
-                byte commandId = in.readByte(); // código do comando (1 byte)
-                byte filenameSize = in.readByte(); // tamanho do nome do arquivo (1 byte)
+                byte[] request = new byte[258];
+                ByteBuffer header = ByteBuffer.allocate(258);
+                in.read(request);
+                header = ByteBuffer.wrap(request); // cria um buffer com o array de bytes recebido
+                header.order(ByteOrder.BIG_ENDIAN); // define a ordem dos bytes (BIG_ENDIAN)
+                byte messageType = header.get(); // tipo de mensagem (1 byte)
+                byte commandId = header.get(); // código do comando (1 byte)
+                byte filenameSize = header.get(); // tamanho do nome do arquivo (1 byte)
                 byte[] filenameBytes = new byte[filenameSize]; // array de bytes para o nome do arquivo
-                in.readFully(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
+                header.get(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
                 String filename = new String(filenameBytes); // Converte o nome do arquivo para String
+
 
                 Logger logger = Logger.getLogger("server.log"); // pegar o logger
 
                 if (messageType == 1) { // verifica se é uma requisição
 
-                    logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize
-                            + " | Arquivo: " + filename);
+                    TCPServer.logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: "
+                            + filenameSize + " | Arquivo: " + filename);
+
+                    // logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize
+                            // + " | Arquivo: " + filename);
 
                     if (commandId == 1) {
                         handleAddFile(out, filename);
@@ -115,16 +130,13 @@ class ClientThread extends Thread {
                         handleDelete(out, filename);
 
                     } else if (commandId == 3) {
-                        handleGetFilesList(out);
+                        buffer = handleGetFilesList();
 
                     } else if (commandId == 4) {
                         handleGetFile(out, filename);
                     }
 
                 }
-
-                out.writeUTF(buffer); // envia a mensagem para o servidor
-                out.flush();
 
             }
         } catch (EOFException eofe) {
@@ -159,14 +171,17 @@ class ClientThread extends Thread {
             }
 
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
-            out.writeUTF("Sucesso");
+            logger.info("Enviando resposta para o cliente");
+            sendAddFileResponse(out, (byte) 1, (byte) 1, filename);
             // sendResponse(out, (byte) 1, (byte) 1);
+            // out.writeUTF("Sucesso");
 
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
-            // sendResponse(out, (byte) 1, (byte) 2);
-            out.writeUTF("Erro");
             e.printStackTrace();
+            logger.info("Enviando resposta para o cliente");
+            // out.writeUTF("Erro");
+            // sendResponse(out, (byte) 1, (byte) 2);
 
         }
     }
@@ -177,64 +192,28 @@ class ClientThread extends Thread {
         File file = new File(serverPath + "/" + filename);
         if (file.delete()) {
             logger.info("Arquivo " + filename + " deletado com sucesso\n");
-            out.writeUTF("Sucesso");
-            // sendResponse(out, (byte) 2, (byte) 1);
+            sendDeleteResponse(out, (byte) 2, (byte) 1);
         } else {
             logger.info("Erro ao deletar arquivo " + filename + "\n");
-            out.writeUTF("Erro");
-            // sendResponse(out, (byte) 2, (byte) 2);
+            sendDeleteResponse(out, (byte) 2, (byte) 0);
         }
 
     }
 
-    private void handleGetFilesList(DataOutputStream out) throws IOException {
-        Logger logger = Logger.getLogger("server.log"); // pegar o logger
-        ByteBuffer buffer = ByteBuffer.allocate(258);
-
+    private String handleGetFilesList() {
         // Listar os arquivos no diretório de destino (no servidor)
         File file = new File(serverPath);
         File[] files = file.listFiles();
         Integer filesCount = 0;
-        StringBuilder filesNames = new StringBuilder(); // Usaremos um StringBuilder para construir a lista de nomes
-
+        String filesNames = "";
         for (File f : files) {
             if (f.isFile()) {
                 filesCount++;
-                System.out.println(f.getName());
-                filesNames.append(f.getName()).append("\n"); // Adiciona um caractere de quebra de linha após cada nome
+                filesNames += f.getName() + "\n";
             }
         }
 
-        logger.info("Criando e adicionando dados no buffer");
-        out.writeUTF("Sucesso");
-        // buffer = ByteBuffer.allocate(2);
-        // buffer.put((byte) ((filesCount >> 8) & 0xFF)); // byte mais significativo
-        // buffer.put((byte) (filesCount & 0xFF)); // byte menos significativo
-
-        // byte[] bytes = buffer.array();
-        // int size = buffer.limit();
-
-        // out.write(bytes, 0, size);
-        // out.flush();
-
-        // Agora, envie os nomes dos arquivos um a um
-        // String[] fileNamesArray = filesNames.toString().split("\n"); // Divide os nomes por quebra de linha
-        // for (String fileName : fileNamesArray) {
-        //     byte[] filenameBytes = fileName.getBytes(StandardCharsets.UTF_8); // Use a codificação correta
-
-        //     byte filenameLength = (byte) filenameBytes.length;
-
-        //     out.write(filenameLength);
-        //     out.flush();
-
-        //     logger.info("Enviando nome do arquivo byte a byte");
-        //     out.write(filenameBytes);
-        //     out.flush();
-
-        //     // Adicione uma linha em branco após cada nome de arquivo
-        //     out.write('\n');
-        //     out.flush();
-        // }
+        return filesNames;
     }
 
     private void handleGetFile(DataOutputStream out, String filename) throws IOException{
@@ -257,31 +236,75 @@ class ClientThread extends Thread {
             }
 
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
-            out.writeUTF("Sucesso");
             // sendResponse(out, (byte) 1, (byte) 1);
+            out.writeUTF("Sucesso");
 
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
-            out.writeUTF("Erro");
             // sendResponse(out, (byte) 1, (byte) 2);
             e.printStackTrace();
+            out.writeUTF("Erro");
 
         }
     }
 
-    private static ByteBuffer sendResponse(DataOutputStream out, byte command, byte status) throws IOException {
+    // private static ByteBuffer sendResponse(DataOutputStream out, byte command, byte status) throws IOException {
 
-        byte[] bytes = new byte[259];
-        ByteBuffer header = ByteBuffer.allocate(258);
+    //     byte[] bytes = new byte[259];
+    //     ByteBuffer header = ByteBuffer.allocate(258);
+    //     header.order(ByteOrder.BIG_ENDIAN);
+    //     header.put((byte) 2);
+    //     header.put(command);
+    //     header.put(status);
+    //     bytes = header.array();
+    //     int size = header.limit();
+    //     out.write(bytes, 0, size);
+    //     out.flush();
+
+    //     return header;
+    // }
+
+
+    private void sendAddFileResponse(DataOutputStream out, byte command, byte status, String filename) throws IOException {
+
+        File file = new File(localPath + "/" + filename);
+        long fileSize = file.length();
+        
+        if (fileSize > Math.pow(2, 232)) {
+            throw new IllegalArgumentException("O arquivo é muito grande para ser incluído na resposta.");
+        }
+
+        byte[] fileContent = Files.readAllBytes(file.toPath()); 
+        int headerSize = 1 + 1 + 1 + 4;
+        int fileSizeInt = (int) fileSize;
+        int totalSize = headerSize + fileSizeInt;
+        System.out.println("Tamanho do header: " + totalSize);
+        ByteBuffer header = ByteBuffer.allocate(259);
         header.order(ByteOrder.BIG_ENDIAN);
         header.put((byte) 2);
         header.put(command);
         header.put(status);
-        bytes = header.array();
-        int size = header.limit();
-        out.write(bytes, 0, size);
+        header.putLong(fileSize);
+        // header.position(headerSize);
+        header.put(fileContent);
+
+        int size = header.limit(); // tamanho do array de bytes
+
+        byte [] bytes = header.array();
+        out.write(bytes, 0, totalSize);
+        out.flush();
+    }
+
+    private void sendDeleteResponse(DataOutputStream out, byte command, byte status) throws IOException {
+
+        byte[] bytes = new byte[3];
+        ByteBuffer header = ByteBuffer.allocate(3);
+        header.order(ByteOrder.BIG_ENDIAN);
+        header.put((byte) 2);
+        header.put(command);
+        header.put(status);
+        out.write(header.array());
         out.flush();
 
-        return header;
     }
 } // class

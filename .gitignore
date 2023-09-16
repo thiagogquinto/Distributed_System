@@ -1,4 +1,4 @@
-/templates/
 *.class
 *.log
 /files/
+*.txt
