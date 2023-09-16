@@ -1,0 +1,8 @@
+byte[] requestHeader = new byte[258];
+in.readFully(requestHeader);
+byte messageType = requestHeader[0]; // tipo de mensagem (1 byte)
+byte commandId = requestHeader[1]; // código do comando (1 byte)
+byte filenameSize = requestHeader[2]; // tamanho do nome do arquivo (1 byte)
+byte[] filenameBytes = new byte[filenameSize]; // array de bytes para o nome do arquivo
+System.arraycopy(requestHeader, 3, filenameBytes, 0, filenameSize);
+String filename = new String(filenameBytes); // Converte o nome do arquivo para String

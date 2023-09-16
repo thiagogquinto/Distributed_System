@@ -67,6 +67,7 @@ class ClientThread extends Thread {
 
     String serverPath = System.getProperty("user.dir") + "/files/";
     String localPath = System.getProperty("user.dir");
+    String downloadPath = System.getProperty("user.dir") + "/Downloads/";
 
     public ClientThread(Socket clientSocket) {
         try {
@@ -101,28 +102,27 @@ class ClientThread extends Thread {
                 String filename = new String(filenameBytes); // Converte o nome do arquivo para String
 
                 Logger logger = Logger.getLogger("server.log"); // pegar o logger
-                
+
                 if (messageType == 1) { // verifica se é uma requisição
 
                     logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize
                             + " | Arquivo: " + filename);
 
                     if (commandId == 1) {
-                        handleAddFile(filename);
+                        handleAddFile(out, filename);
 
                     } else if (commandId == 2) {
-                        handleDelete(filename);
+                        handleDelete(out, filename);
 
                     } else if (commandId == 3) {
                         handleGetFilesList(out);
 
                     } else if (commandId == 4) {
-                        handleGetFile(filename);
+                        handleGetFile(out, filename);
                     }
 
                 }
 
-                
                 out.writeUTF(buffer); // envia a mensagem para o servidor
                 out.flush();
 
@@ -143,18 +143,14 @@ class ClientThread extends Thread {
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
 
-    private void handleAddFile(String filename) throws IOException {
+    private void handleAddFile(DataOutputStream out, String filename) throws IOException {
         Logger logger = Logger.getLogger("server.log");
 
         File srcFile = new File(localPath + "/" + filename);
         File destFile = new File(serverPath + "/" + filename);
 
-        FileInputStream fis = null;
-        FileOutputStream fos = null;
-
-        try {
-            fis = new FileInputStream(srcFile);
-            fos = new FileOutputStream(destFile);
+        try (FileInputStream fis = new FileInputStream(srcFile);
+                FileOutputStream fos = new FileOutputStream(destFile)) {
 
             int c;
 
@@ -163,39 +159,30 @@ class ClientThread extends Thread {
             }
 
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
-            sendResponse(out, (byte) 1, (byte) 1);
+            out.writeUTF("Sucesso");
+            // sendResponse(out, (byte) 1, (byte) 1);
 
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
-            sendResponse(out, (byte) 1, (byte) 2);
+            // sendResponse(out, (byte) 1, (byte) 2);
+            out.writeUTF("Erro");
             e.printStackTrace();
 
-        } finally {
-            try {
-                if (fis != null) {
-                    fis.close();
-                }
-
-                if (fos != null) {
-                    fos.close();
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
-    private void handleDelete(String filename) throws IOException {
+    private void handleDelete(DataOutputStream out, String filename) throws IOException {
 
         Logger logger = Logger.getLogger("server.log"); // pegar o logger
         File file = new File(serverPath + "/" + filename);
         if (file.delete()) {
             logger.info("Arquivo " + filename + " deletado com sucesso\n");
-            sendResponse(out, (byte) 2, (byte) 1);
+            out.writeUTF("Sucesso");
+            // sendResponse(out, (byte) 2, (byte) 1);
         } else {
             logger.info("Erro ao deletar arquivo " + filename + "\n");
-            sendResponse(out, (byte) 2, (byte) 2);
+            out.writeUTF("Erro");
+            // sendResponse(out, (byte) 2, (byte) 2);
         }
 
     }
@@ -213,44 +200,73 @@ class ClientThread extends Thread {
         for (File f : files) {
             if (f.isFile()) {
                 filesCount++;
+                System.out.println(f.getName());
                 filesNames.append(f.getName()).append("\n"); // Adiciona um caractere de quebra de linha após cada nome
             }
         }
 
-        
         logger.info("Criando e adicionando dados no buffer");
-        buffer = ByteBuffer.allocate(2);
-        buffer.put((byte) ((filesCount >> 8) & 0xFF)); // byte mais significativo
-        buffer.put((byte) (filesCount & 0xFF)); // byte menos significativo
+        out.writeUTF("Sucesso");
+        // buffer = ByteBuffer.allocate(2);
+        // buffer.put((byte) ((filesCount >> 8) & 0xFF)); // byte mais significativo
+        // buffer.put((byte) (filesCount & 0xFF)); // byte menos significativo
 
-        byte[] bytes = buffer.array();
-        int size = buffer.limit();
+        // byte[] bytes = buffer.array();
+        // int size = buffer.limit();
 
-        out.write(bytes, 0, size);
-        out.flush();
+        // out.write(bytes, 0, size);
+        // out.flush();
 
         // Agora, envie os nomes dos arquivos um a um
-        String[] fileNamesArray = filesNames.toString().split("\n"); // Divide os nomes por quebra de linha
-        for (String fileName : fileNamesArray) {
-            byte[] filenameBytes = fileName.getBytes(StandardCharsets.UTF_8); // Use a codificação correta
+        // String[] fileNamesArray = filesNames.toString().split("\n"); // Divide os nomes por quebra de linha
+        // for (String fileName : fileNamesArray) {
+        //     byte[] filenameBytes = fileName.getBytes(StandardCharsets.UTF_8); // Use a codificação correta
 
-            byte filenameLength = (byte) filenameBytes.length;
+        //     byte filenameLength = (byte) filenameBytes.length;
 
-            out.write(filenameLength);
-            out.flush();
+        //     out.write(filenameLength);
+        //     out.flush();
 
-            logger.info("Enviando nome do arquivo byte a byte");
-            out.write(filenameBytes);
-            out.flush();
+        //     logger.info("Enviando nome do arquivo byte a byte");
+        //     out.write(filenameBytes);
+        //     out.flush();
 
-            // Adicione uma linha em branco após cada nome de arquivo
-            out.write('\n');
-            out.flush();
-        }
+        //     // Adicione uma linha em branco após cada nome de arquivo
+        //     out.write('\n');
+        //     out.flush();
+        // }
     }
 
-    private void handleGetFile(String filename) {
-        System.out.println(filename);
+    private void handleGetFile(DataOutputStream out, String filename) throws IOException{
+        Logger logger = Logger.getLogger("server.log");
+
+        File downloadDir = new File(downloadPath)
+        ;
+        if(!downloadDir.exists()){
+            downloadDir.mkdir();
+        }
+        File srcFile = new File(serverPath + "/" + filename);
+
+        try (FileInputStream fis = new FileInputStream(srcFile);
+                FileOutputStream fos = new FileOutputStream(downloadDir + "/" + filename)) {
+
+            int c;
+
+            while ((c = fis.read()) != -1) {
+                fos.write(c);
+            }
+
+            logger.info("Arquivo " + filename + " copiado com sucesso\n");
+            out.writeUTF("Sucesso");
+            // sendResponse(out, (byte) 1, (byte) 1);
+
+        } catch (IOException e) {
+            logger.info("Erro ao copiar arquivo " + filename);
+            out.writeUTF("Erro");
+            // sendResponse(out, (byte) 1, (byte) 2);
+            e.printStackTrace();
+
+        }
     }
 
     private static ByteBuffer sendResponse(DataOutputStream out, byte command, byte status) throws IOException {

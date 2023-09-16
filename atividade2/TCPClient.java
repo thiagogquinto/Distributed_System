@@ -35,32 +35,35 @@ public class TCPClient {
                 String[] infos = buffer.split(" ");
 
                 if (infos[0].equals("ADDFILE") && infos.length == 2) {
-                    sendRequest(out, (byte) 1, infos[1]);
+                    sendRequestHeader(out, (byte) 1, infos[1]);
 
                 } else if (infos[0].equals("DELETE") && infos.length == 2) {
-                    sendRequest(out, (byte) 2, infos[1]);
+                    sendRequestHeader(out, (byte) 2, infos[1]);
 
                 } else if (infos[0].equals("GETFILESLIST") && infos.length == 1) {
-                    sendRequest(out, (byte) 3, "");
+                    sendRequestHeader(out, (byte) 3, "");
 
                 } else if (infos[0].equals("GETFILE") && infos.length == 2) {
-                    sendRequest(out, (byte) 4, infos[1]);
+                    sendRequestHeader(out, (byte) 4, infos[1]);
 
                 } else {
                     System.out.println("Comando inválido");
                 }
 
-                byte[] bytes = new byte[258]; // Inicializa o array de bytes
+                // byte[] bytes = new byte[258]; // Inicializa o array de bytes
 
-                int bytesRead = in.read(bytes); // aguarda resposta do servidor
+                // int bytesRead = in.read(bytes); // aguarda resposta do servidor
 
-                response = ByteBuffer.wrap(bytes, 0, bytesRead); // Use apenas os bytes lidos
-                response.order(ByteOrder.BIG_ENDIAN);
-                byte responseMessageType = response.get(0);
-                byte responseCommandId = response.get(1);
-                byte responseStatusCode = response.get(2);
+                // response = ByteBuffer.wrap(bytes, 0, bytesRead); // Use apenas os bytes lidos
+                // response.order(ByteOrder.BIG_ENDIAN);
+                // byte responseMessageType = response.get(0);
+                // byte responseCommandId = response.get(1);
+                // byte responseStatusCode = response.get(2);
 
-                printResponse(responseCommandId, responseStatusCode);
+                // printResponse(responseCommandId, responseStatusCode);
+
+                buffer = in.readUTF(); // aguarda resposta do servidor
+                System.out.println(buffer);
 
                 // Não é necessário imprimir a mensagem original do cliente
             }
@@ -104,25 +107,32 @@ public class TCPClient {
                 System.out.println("Arquivo recebido");
                 break;
             default:
-                System.out.println("Comando inválido" + responseCommandId);
+                System.out.println("Comando inválido " + responseCommandId);
                 break;
         }
     }
 
-    private static ByteBuffer generateReqHeader(byte commandId, byte filenameSize, byte[] filename) {
-        ByteBuffer header = ByteBuffer.allocate(258);
-        header.order(ByteOrder.BIG_ENDIAN);
-        header.put((byte) 1);
-        header.put(commandId);
-        header.put(filenameSize);
-        header.put(filename);
-        return header;
+    /**
+     * Envia uma requisição para o servidor com o comando e o nome do arquivo a ser manipulado 
+     * @param out DataOutputStream do socket do cliente para enviar a requisição
+     * @param commandId código do comando
+     * @param filename nome do arquivo
+     * @throws IOException caso ocorra algum erro de I/O
+     */
+    private static void sendRequestHeader(DataOutputStream out, byte commandId, String filename) throws IOException {
+        byte[] filenameBytes = filename.getBytes();
+        byte filenameSize = (byte) filenameBytes.length;
+        out.write((byte) 1);
+        out.write(commandId);
+        out.write(filenameSize);
+        out.write(filenameBytes);
+        out.flush();
     }
 
-    private static void sendRequest(DataOutputStream out, byte command, String filename) throws IOException {
-        byte[] filenameBytes = filename.getBytes();
-        ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filenameBytes);
-        out.write(header.array());
-    }
+    // private static void sendRequest(DataOutputStream out, byte command, String filename) throws IOException {
+    //     byte[] filenameBytes = filename.getBytes();
+    //     ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filenameBytes);
+    //     out.write(header.array());
+    // }
 
 } // class
