@@ -74,10 +74,10 @@ public class TCPClient {
                             handleDeleteResponse(headerBuffer, logger);
                             break;
                         case 0x03:
-                            handleGetFilesListResponse();
+                            handleGetFilesListResponse(headerBuffer, logger);
                             break;
                         case 0x04:
-                            handleGetFileResponse();
+                            handleGetFileResponse(headerBuffer, logger);
                             break;
                     }
                 }
@@ -136,15 +136,15 @@ public class TCPClient {
     private static void handleAddFileResponse(ByteBuffer response, Logger logger) throws IOException{
         
         byte statusCode = response.get();
-        Long fileSize = response.getLong();
+        Integer fileSize = response.getInt();
         // int fileSizeInt = fileSize.intValue();
-        byte[] fileBytes = new byte[50];
+        byte[] fileBytes = new byte[fileSize];
         response.get(fileBytes);
         String fileContent = new String(fileBytes);
         logger.info("Status: " + statusCode + " File size: " + fileSize + " File content: " + fileContent);
 
     }
-
+    
     private static void handleDeleteResponse(ByteBuffer response, Logger logger) throws IOException{
         byte statusCode = response.get();
 
@@ -156,11 +156,22 @@ public class TCPClient {
 
     }    
 
-    private static void handleGetFilesListResponse(){
+    private static void handleGetFilesListResponse(ByteBuffer response, Logger logger){
+        byte statusCode = response.get();
+        Short filesCount = response.getShort();
 
+        // System.out.println("Status: " + statusCode + " - " + filesCount + " arquivos encontrados");
+
+        for (int i = 0; i < filesCount; i++) {
+            byte filenameSize = response.get();
+            byte[] filenameBytes = new byte[filenameSize];
+            response.get(filenameBytes);
+            String filename = new String(filenameBytes);
+            logger.info("Status: " + statusCode + " - " + filename);
+        }
     }
 
-    private static void handleGetFileResponse(){
+    private static void handleGetFileResponse(ByteBuffer response, Logger logger){
 
     }
 

@@ -6,6 +6,8 @@ package atividade2;
  */
 import java.io.*;
 import java.net.*;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -130,7 +132,7 @@ class ClientThread extends Thread {
                         handleDelete(out, filename);
 
                     } else if (commandId == 3) {
-                        buffer = handleGetFilesList();
+                        handleGetFilesList();
 
                     } else if (commandId == 4) {
                         handleGetFile(out, filename);
@@ -172,7 +174,7 @@ class ClientThread extends Thread {
 
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
             logger.info("Enviando resposta para o cliente");
-            sendAddFileResponse(out, (byte) 1, (byte) 1, filename);
+            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 1, filename);
             // sendResponse(out, (byte) 1, (byte) 1);
             // out.writeUTF("Sucesso");
 
@@ -200,20 +202,28 @@ class ClientThread extends Thread {
 
     }
 
-    private String handleGetFilesList() {
+    private void handleGetFilesList() {
         // Listar os arquivos no diretório de destino (no servidor)
         File file = new File(serverPath);
         File[] files = file.listFiles();
-        Integer filesCount = 0;
-        String filesNames = "";
-        for (File f : files) {
-            if (f.isFile()) {
-                filesCount++;
-                filesNames += f.getName() + "\n";
-            }
-        }
+        // byte filesCount = 0;
+        // String filesNames = "";
 
-        return filesNames;
+        List <String> filesInDir = new ArrayList<String>();
+        if(file.exists()){
+            for (File f : files) {
+                if (f.isFile()) {
+                    // filesCount++; 
+                    // filesNames += f.getName() + "\n";
+                    System.out.println(f.getName());
+                    filesInDir.add(f.getName());
+                }
+            }
+            sendGetFilesListResponse(out, (byte)3, (byte) 1, filesInDir);
+        } else {
+            sendGetFilesListResponse(out, (byte) 3, (byte) 0, filesInDir);
+        }
+        // return filesNames;
     }
 
     private void handleGetFile(DataOutputStream out, String filename) throws IOException{
@@ -264,8 +274,43 @@ class ClientThread extends Thread {
     //     return header;
     // }
 
+    private void sendGetFilesListResponse(DataOutputStream out, byte command, byte status, List <String> files){
 
-    private void sendAddFileResponse(DataOutputStream out, byte command, byte status, String filename) throws IOException {
+        short qtdeFiles = (short) files.size();
+        System.out.println("Quantidade de arquivos: " + qtdeFiles);
+
+        int headerSize = 5;
+        for (String f : files) {
+            headerSize += 1 + f.length();
+        }
+
+        ByteBuffer header = ByteBuffer.allocate(headerSize);
+        header.order(ByteOrder.BIG_ENDIAN);
+        header.put((byte) 2);
+        header.put(command);
+        header.put(status);
+        header.putShort(qtdeFiles);
+
+        for (String f : files) {
+            header.put((byte) f.length());
+            byte[] filenameBytes = f.getBytes();
+            header.put(filenameBytes);
+        }
+
+        int size = header.limit(); // tamanho do array de bytes
+
+        byte [] bytes = header.array();
+        try {
+            out.write(bytes, 0, size);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private void sendAddFileAndGetFileResponse(DataOutputStream out, byte command, byte status, String filename) throws IOException {
 
         File file = new File(localPath + "/" + filename);
         long fileSize = file.length();
@@ -284,7 +329,7 @@ class ClientThread extends Thread {
         header.put((byte) 2);
         header.put(command);
         header.put(status);
-        header.putLong(fileSize);
+        header.putInt(fileSizeInt); 
         // header.position(headerSize);
         header.put(fileContent);
 
