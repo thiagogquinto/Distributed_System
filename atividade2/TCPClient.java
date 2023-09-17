@@ -7,6 +7,17 @@ import java.util.logging.Logger;
 import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
 
+/**
+ * Descrição: Cliente TCP simples que se conecta com o servidor e envia comandos para manipular arquivos no servidor
+ * como adicionar, deletar, listar e baixar arquivos. 
+ * A comunicação entre o cliente e o servidor é feita através de um protocolo de comunicação simples, onde o cliente
+ * envia um cabeçalho com o tipo de mensagem e o comando a ser executado, e o servidor responde com um cabeçalho com o
+ * tipo de mensagem e o status da operação, seguido dos dados da resposta.
+ * 
+ * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
+ */
+
+
 public class TCPClient {
     
     public static void main(String args[]) {
@@ -58,13 +69,10 @@ public class TCPClient {
                 headerBuffer.order(ByteOrder.BIG_ENDIAN);
                 byte messageType = headerBuffer.get();
                 byte commandId = headerBuffer.get();
-                // byte statusCode = headerBuffer.get();
-                // int fileSize = 0;
-
-                // handleResponseHeader(messageType, commandId, statusCode, headerBuffer);
-
+               
                 Logger logger = TCPServer.getLogger();
 
+                /* verifica qual o tipo de comando realizado para tratar o cabeçalho corretamente */
                 if(messageType == 0x02){
                     switch(commandId){
                         case 0x01:
@@ -81,17 +89,7 @@ public class TCPClient {
                             break;
                     }
                 }
-
-                
-                // out.writeUTF(buffer); // enviaa a mensagem para o servidor
-                // out.flush();
-
-                // buffer = in.readUTF(); // aguarda resposta do servidor
-
-
-                // System.out.println(buffer); // imprime resposta do servidor
             }
-
 
         } catch (UnknownHostException ue) {
             System.out.println("Socket:" + ue.getMessage());
@@ -141,8 +139,13 @@ public class TCPClient {
         byte[] fileBytes = new byte[fileSize];
         response.get(fileBytes);
         String fileContent = new String(fileBytes);
-        logger.info("Status: " + statusCode + " File size: " + fileSize + " File content: " + fileContent);
 
+        if(statusCode == 1){
+            // logger.info("Status: " + statusCode + " File size: " + fileSize + " File content: " + fileContent);
+            logger.info("Arquivo de " + fileSize + " bytes inserido com sucesso");
+        } else{
+            logger.info("Erro ao inserir arquivo de " + fileSize + " bytes");
+        }
     }
     
     private static void handleDeleteResponse(ByteBuffer response, Logger logger) throws IOException{
@@ -153,14 +156,11 @@ public class TCPClient {
         } else {
             logger.info("Status: " + statusCode + " - Não foi possível deletar o arquivo");
         }
-
     }    
 
     private static void handleGetFilesListResponse(ByteBuffer response, Logger logger){
         byte statusCode = response.get();
         Short filesCount = response.getShort();
-
-        // System.out.println("Status: " + statusCode + " - " + filesCount + " arquivos encontrados");
 
         for (int i = 0; i < filesCount; i++) {
             byte filenameSize = response.get();
@@ -172,7 +172,15 @@ public class TCPClient {
     }
 
     private static void handleGetFileResponse(ByteBuffer response, Logger logger){
+        byte statusCode = response.get();
+        Integer fileSize = response.getInt();
+        // int fileSizeInt = fileSize.intValue();
+        byte[] fileBytes = new byte[fileSize];
+        response.get(fileBytes);
+        String fileContent = new String(fileBytes);
 
+        if(statusCode == 1){
+            logger.info("Arquivo de " + fileSize + " baixado com sucesso!");
+        }
     }
-
 } // class

@@ -167,24 +167,18 @@ class ClientThread extends Thread {
                 FileOutputStream fos = new FileOutputStream(destFile)) {
 
             int c;
-
             while ((c = fis.read()) != -1) {
                 fos.write(c);
             }
 
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
             logger.info("Enviando resposta para o cliente");
-            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 1, filename);
-            // sendResponse(out, (byte) 1, (byte) 1);
-            // out.writeUTF("Sucesso");
-
+            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 1, destFile);
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
             e.printStackTrace();
             logger.info("Enviando resposta para o cliente");
-            // out.writeUTF("Erro");
-            // sendResponse(out, (byte) 1, (byte) 2);
-
+            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 0, destFile);
         }
     }
 
@@ -206,16 +200,11 @@ class ClientThread extends Thread {
         // Listar os arquivos no diretório de destino (no servidor)
         File file = new File(serverPath);
         File[] files = file.listFiles();
-        // byte filesCount = 0;
-        // String filesNames = "";
-
+    
         List <String> filesInDir = new ArrayList<String>();
         if(file.exists()){
             for (File f : files) {
                 if (f.isFile()) {
-                    // filesCount++; 
-                    // filesNames += f.getName() + "\n";
-                    System.out.println(f.getName());
                     filesInDir.add(f.getName());
                 }
             }
@@ -223,14 +212,15 @@ class ClientThread extends Thread {
         } else {
             sendGetFilesListResponse(out, (byte) 3, (byte) 0, filesInDir);
         }
-        // return filesNames;
     }
 
     private void handleGetFile(DataOutputStream out, String filename) throws IOException{
         Logger logger = Logger.getLogger("server.log");
 
-        File downloadDir = new File(downloadPath)
-        ;
+        File downloadDir = new File(downloadPath);
+
+        File destFile = new File(downloadDir + "/" + filename);
+
         if(!downloadDir.exists()){
             downloadDir.mkdir();
         }
@@ -246,33 +236,13 @@ class ClientThread extends Thread {
             }
 
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
-            // sendResponse(out, (byte) 1, (byte) 1);
-            out.writeUTF("Sucesso");
-
+            sendAddFileAndGetFileResponse(out, (byte) 4, (byte) 1, destFile);
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
-            // sendResponse(out, (byte) 1, (byte) 2);
+            sendAddFileAndGetFileResponse(out, (byte) 4, (byte) 0, destFile);
             e.printStackTrace();
-            out.writeUTF("Erro");
-
         }
     }
-
-    // private static ByteBuffer sendResponse(DataOutputStream out, byte command, byte status) throws IOException {
-
-    //     byte[] bytes = new byte[259];
-    //     ByteBuffer header = ByteBuffer.allocate(258);
-    //     header.order(ByteOrder.BIG_ENDIAN);
-    //     header.put((byte) 2);
-    //     header.put(command);
-    //     header.put(status);
-    //     bytes = header.array();
-    //     int size = header.limit();
-    //     out.write(bytes, 0, size);
-    //     out.flush();
-
-    //     return header;
-    // }
 
     private void sendGetFilesListResponse(DataOutputStream out, byte command, byte status, List <String> files){
 
@@ -309,29 +279,35 @@ class ClientThread extends Thread {
 
     }
 
+    /**
+     * 
+     * @param out DataOutputStream do socket do cliente para enviar a resposta 
+     * @param command byte com o código do comando, 1 para adicionar arquivo e 4 para pegar arquivo
+     * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
+     * @param filename caminho do arquivo no qual foi feita a operação
+     * @throws IOException caso ocorra algum erro de I/O
+     */
+    private void sendAddFileAndGetFileResponse(DataOutputStream out, byte command, byte status, File filename) throws IOException {
 
-    private void sendAddFileAndGetFileResponse(DataOutputStream out, byte command, byte status, String filename) throws IOException {
-
-        File file = new File(localPath + "/" + filename);
-        long fileSize = file.length();
+        long fileSize = filename.length();
         
         if (fileSize > Math.pow(2, 232)) {
             throw new IllegalArgumentException("O arquivo é muito grande para ser incluído na resposta.");
         }
 
-        byte[] fileContent = Files.readAllBytes(file.toPath()); 
+        byte[] fileContent = Files.readAllBytes(filename.toPath()); 
         int headerSize = 1 + 1 + 1 + 4;
         int fileSizeInt = (int) fileSize;
-        int totalSize = headerSize + fileSizeInt;
+        int totalSize = headerSize + fileSizeInt + 1;
         System.out.println("Tamanho do header: " + totalSize);
-        ByteBuffer header = ByteBuffer.allocate(259);
+        ByteBuffer header = ByteBuffer.allocate(totalSize);
         header.order(ByteOrder.BIG_ENDIAN);
         header.put((byte) 2);
         header.put(command);
         header.put(status);
         header.putInt(fileSizeInt); 
-        // header.position(headerSize);
         header.put(fileContent);
+        // header.position(headerSize);
 
         int size = header.limit(); // tamanho do array de bytes
 
@@ -340,6 +316,14 @@ class ClientThread extends Thread {
         out.flush();
     }
 
+    /**
+     * Envia o cabeçalho de resposta para o cliente do comando de deletar arquivo do servidor, os cabeçalhos são compostos por 3 bytes, sendo o primeiro o tipo de mensagem, o segundo o comando e o terceiro o status
+     * 
+     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * @param command byte com o código do comando
+     * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
+     * @throws IOException caso ocorra algum erro de I/O
+     */
     private void sendDeleteResponse(DataOutputStream out, byte command, byte status) throws IOException {
 
         byte[] bytes = new byte[3];

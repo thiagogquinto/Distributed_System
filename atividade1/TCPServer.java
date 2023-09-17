@@ -1,9 +1,16 @@
 package atividade1;
 
 /**
- * TCPServer: Servidor para conexao TCP com Threads Descricao: Recebe uma
- * conexao, cria uma thread, recebe uma mensagem e finaliza a conexao
+ * Descrição: TCP Server simples que recebe comandos do cliente para manipular dados no servidor e 
+ * envia respostas para o cliente com o resultado da operação.
+ * 
+ * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 06/09/2023
+ * Data de atualização: 07/09/2023, 09/09/2023, 11/09/2023, 12/09/2023, 13/09/2023
  */
+
+
 import java.net.*;
 import java.io.*;
 import java.util.Scanner;
@@ -40,7 +47,8 @@ public class TCPServer {
 /**
  * Classe ClientThread: Thread responsavel pela comunicacao
  * Descricao: Rebebe um socket, cria os objetos de leitura e escrita,
- * aguarda msgs clientes e responde com a msg + :OK
+ * aguarda msgs clientes para realizar a ação desejada e devolve uma resposta
+ * para o cliente.
  */
 class ClientThread extends Thread {
 
@@ -172,6 +180,14 @@ class ClientThread extends Thread {
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
 
+
+    /**
+     * Método para autenticar o usuário - verifica se o usuário e senha estão no arquivo users.txt
+     * que contém os usuários e senhas "registrados" no servidor.
+     * @param user nome do usuário que está tentando se autenticar
+     * @param password senha do usuário em HASH SHA-512 que está tentando se autenticar
+     * @return true se o usuário e senha estiverem corretos, false caso contrário
+     */
     private boolean authenticate(String user, String password) {
         File file = new File("./atividade1/users.txt"); // arquivo de usuarios e senhas "registrados" no servidor
         Scanner scanner = null;
