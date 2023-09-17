@@ -163,6 +163,12 @@ class ClientThread extends Thread {
         File srcFile = new File(localPath + "/" + filename);
         File destFile = new File(serverPath + "/" + filename);
 
+        if (!srcFile.exists()) {
+            logger.info("Arquivo " + filename + " não encontrado no cliente\n");
+            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 0, null); // Envie uma resposta de erro
+            return;
+        }
+
         try (FileInputStream fis = new FileInputStream(srcFile);
                 FileOutputStream fos = new FileOutputStream(destFile)) {
 
@@ -208,7 +214,7 @@ class ClientThread extends Thread {
                     filesInDir.add(f.getName());
                 }
             }
-            sendGetFilesListResponse(out, (byte)3, (byte) 1, filesInDir);
+            sendGetFilesListResponse(out, (byte) 3, (byte) 1, filesInDir);
         } else {
             sendGetFilesListResponse(out, (byte) 3, (byte) 0, filesInDir);
         }
@@ -224,7 +230,15 @@ class ClientThread extends Thread {
         if(!downloadDir.exists()){
             downloadDir.mkdir();
         }
+        
         File srcFile = new File(serverPath + "/" + filename);
+
+        if(!srcFile.exists()){
+            logger.info("Arquivo " + filename + " não encontrado no servidor\n");
+            sendAddFileAndGetFileResponse(out, (byte) 4, (byte) 0, null); // Envie uma resposta de erro
+            return;
+        }
+
 
         try (FileInputStream fis = new FileInputStream(srcFile);
                 FileOutputStream fos = new FileOutputStream(downloadDir + "/" + filename)) {
@@ -289,17 +303,28 @@ class ClientThread extends Thread {
      */
     private void sendAddFileAndGetFileResponse(DataOutputStream out, byte command, byte status, File filename) throws IOException {
 
-        long fileSize = filename.length();
+        System.out.println("Enviando resposta para o cliente - aqui");
+
+        long fileSize ;
+
+        byte[] fileContent = new byte[0];
+
+        if (filename == null) {
+            fileSize = 0;
+        } else {
+            fileSize = filename.length();
+            fileContent = Files.readAllBytes(filename.toPath()); 
+        }
+
+        // long fileSize = filename.length();
         
         if (fileSize > Math.pow(2, 232)) {
             throw new IllegalArgumentException("O arquivo é muito grande para ser incluído na resposta.");
         }
 
-        byte[] fileContent = Files.readAllBytes(filename.toPath()); 
         int headerSize = 1 + 1 + 1 + 4;
         int fileSizeInt = (int) fileSize;
         int totalSize = headerSize + fileSizeInt + 1;
-        System.out.println("Tamanho do header: " + totalSize);
         ByteBuffer header = ByteBuffer.allocate(totalSize);
         header.order(ByteOrder.BIG_ENDIAN);
         header.put((byte) 2);

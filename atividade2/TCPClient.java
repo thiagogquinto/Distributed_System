@@ -181,6 +181,8 @@ public class TCPClient {
 
         if(statusCode == 1){
             logger.info("Arquivo de " + fileSize + " baixado com sucesso!");
+        } else{
+            logger.info("Erro ao baixar arquivo de " + fileSize + " bytes");
         }
     }
 } // class
