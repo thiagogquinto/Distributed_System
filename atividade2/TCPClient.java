@@ -6,6 +6,7 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 
 /**
  * Descrição: Cliente TCP simples que se conecta com o servidor e envia comandos para manipular arquivos no servidor
@@ -76,10 +77,10 @@ public class TCPClient {
                 if(messageType == 0x02){
                     switch(commandId){
                         case 0x01:
-                            handleAddFileResponse(headerBuffer, logger);
+                            handleDeleteAndAddFileResponse(headerBuffer, logger, commandId);
                             break;
                         case 0x02:
-                            handleDeleteResponse(headerBuffer, logger);
+                            handleDeleteAndAddFileResponse(headerBuffer, logger, commandId);
                             break;
                         case 0x03:
                             handleGetFilesListResponse(headerBuffer, logger);
@@ -115,46 +116,67 @@ public class TCPClient {
      * @param filename nome do arquivo
      * @throws IOException caso ocorra algum erro de I/O
      */
-    private static ByteBuffer generateReqHeader(byte commandId, byte filenameSize, byte[] filename) {
-        ByteBuffer header = ByteBuffer.allocate(258);
+    private static ByteBuffer generateReqHeader(byte commandId, byte filenameSize, byte[] filename, int fileSize, byte[] fileBytes) {
+        ByteBuffer header = ByteBuffer.allocate(258 + fileSize);
         header.order(ByteOrder.BIG_ENDIAN);
         header.put((byte) 1);
         header.put(commandId);
         header.put(filenameSize);
         header.put(filename);
+        // return header;
+
+        System.out.println("fileSize: " + fileSize);
+        if(commandId == 0x01){
+            header.putInt(fileSize);
+            header.put(fileBytes);
+        }
+
+        System.out.println("header: " + header);
+
         return header;
     }
 
     private static void sendRequest(DataOutputStream out, byte command, String filename) throws IOException {
+
+
+        if(command == 0x01){
+            File file = new File(System.getProperty("user.dir") + "/" + filename);
+
+            if(!file.exists()){
+                byte[] fileBytes = new byte[0];
+                ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filename.getBytes(), 0, fileBytes);
+                out.write(header.array());
+                return;
+            }
+
+            long fileSize = file.length();
+            int fileSizeInt = (int) fileSize;
+            byte[] fileBytes = new byte[fileSizeInt];
+            fileBytes = Files.readAllBytes(file.toPath());
+            ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filename.getBytes(), fileSizeInt, fileBytes);
+            out.write(header.array());
+            return;
+        }
         byte[] filenameBytes = filename.getBytes();
-        ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filenameBytes);
+        ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filenameBytes, 0, null);
         out.write(header.array());
     }
-
-    private static void handleAddFileResponse(ByteBuffer response, Logger logger) throws IOException{
-        
-        byte statusCode = response.get();
-        Integer fileSize = response.getInt();
-        // int fileSizeInt = fileSize.intValue();
-        byte[] fileBytes = new byte[fileSize];
-        response.get(fileBytes);
-        String fileContent = new String(fileBytes);
-
-        if(statusCode == 1){
-            // logger.info("Status: " + statusCode + " File size: " + fileSize + " File content: " + fileContent);
-            logger.info("Arquivo de " + fileSize + " bytes inserido com sucesso");
-        } else{
-            logger.info("Erro ao inserir arquivo de " + fileSize + " bytes");
-        }
-    }
     
-    private static void handleDeleteResponse(ByteBuffer response, Logger logger) throws IOException{
+    private static void handleDeleteAndAddFileResponse(ByteBuffer response, Logger logger, byte commandId) throws IOException{
         byte statusCode = response.get();
-
-        if (statusCode == 0x01) {
-            logger.info("Status: " + statusCode + " - Arquivo deletado com sucesso");
-        } else {
-            logger.info("Status: " + statusCode + " - Não foi possível deletar o arquivo");
+        
+        if(commandId == 0x02){
+            if (statusCode == 0x01) {
+                logger.info("Status: " + statusCode + " - Arquivo deletado com sucesso");
+            } else {
+                logger.info("Status: " + statusCode + " - Não foi possível deletar o arquivo");
+            }
+        } else if(commandId == 0x01){
+            if(statusCode == 0x01){
+                logger.info("Status: " + statusCode + " - Arquivo adicionado com sucesso no servidor");
+            } else{
+                logger.info("Status: " + statusCode + " - Não foi possível adicionar o arquivo no servidor");
+            }
         }
     }    
 

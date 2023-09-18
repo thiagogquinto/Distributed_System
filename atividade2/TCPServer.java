@@ -114,6 +114,13 @@ class ClientThread extends Thread {
                 header.get(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
                 String filename = new String(filenameBytes); // Converte o nome do arquivo para String
 
+                if(commandId == 0x01){
+                    int fileSize = header.getInt();
+                    byte[] fileBytes = new byte[fileSize];
+                    header.get(fileBytes);
+                    // System.out.println("Tamanho do arquivo: " + fileSize);
+                }
+
 
                 Logger logger = Logger.getLogger("server.log"); // pegar o logger
 
@@ -135,6 +142,7 @@ class ClientThread extends Thread {
                         handleGetFilesList();
 
                     } else if (commandId == 4) {
+                        System.out.println("Comando get file");
                         handleGetFile(out, filename);
                     }
 
@@ -165,7 +173,7 @@ class ClientThread extends Thread {
 
         if (!srcFile.exists()) {
             logger.info("Arquivo " + filename + " não encontrado no cliente\n");
-            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 0, null); // Envie uma resposta de erro
+            sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 0); // Envie uma resposta de erro
             return;
         }
 
@@ -179,12 +187,12 @@ class ClientThread extends Thread {
 
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
             logger.info("Enviando resposta para o cliente");
-            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 1, destFile);
+            sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 1);
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
             e.printStackTrace();
             logger.info("Enviando resposta para o cliente");
-            sendAddFileAndGetFileResponse(out, (byte) 1, (byte) 0, destFile);
+            sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 0);
         }
     }
 
@@ -194,10 +202,10 @@ class ClientThread extends Thread {
         File file = new File(serverPath + "/" + filename);
         if (file.delete()) {
             logger.info("Arquivo " + filename + " deletado com sucesso\n");
-            sendDeleteResponse(out, (byte) 2, (byte) 1);
+            sendDeleteAndAddFileResponse(out, (byte) 2, (byte) 1);
         } else {
             logger.info("Erro ao deletar arquivo " + filename + "\n");
-            sendDeleteResponse(out, (byte) 2, (byte) 0);
+            sendDeleteAndAddFileResponse(out, (byte) 2, (byte) 0);
         }
 
     }
@@ -234,26 +242,24 @@ class ClientThread extends Thread {
         File srcFile = new File(serverPath + "/" + filename);
 
         if(!srcFile.exists()){
+            System.out.println("Arquivo " + filename + " não encontrado no servidor - reasd\n");
             logger.info("Arquivo " + filename + " não encontrado no servidor\n");
-            sendAddFileAndGetFileResponse(out, (byte) 4, (byte) 0, null); // Envie uma resposta de erro
+            sendGetFileResponse(out, (byte) 4, (byte) 0, null); // Envie uma resposta de erro
             return;
         }
 
 
         try (FileInputStream fis = new FileInputStream(srcFile);
                 FileOutputStream fos = new FileOutputStream(downloadDir + "/" + filename)) {
-
             int c;
-
             while ((c = fis.read()) != -1) {
                 fos.write(c);
             }
-
             logger.info("Arquivo " + filename + " copiado com sucesso\n");
-            sendAddFileAndGetFileResponse(out, (byte) 4, (byte) 1, destFile);
+            sendGetFileResponse(out, (byte) 4, (byte) 1, destFile);
         } catch (IOException e) {
             logger.info("Erro ao copiar arquivo " + filename);
-            sendAddFileAndGetFileResponse(out, (byte) 4, (byte) 0, destFile);
+            sendGetFileResponse(out, (byte) 4, (byte) 0, destFile);
             e.printStackTrace();
         }
     }
@@ -301,9 +307,7 @@ class ClientThread extends Thread {
      * @param filename caminho do arquivo no qual foi feita a operação
      * @throws IOException caso ocorra algum erro de I/O
      */
-    private void sendAddFileAndGetFileResponse(DataOutputStream out, byte command, byte status, File filename) throws IOException {
-
-        System.out.println("Enviando resposta para o cliente - aqui");
+    private void sendGetFileResponse(DataOutputStream out, byte command, byte status, File filename) throws IOException {
 
         long fileSize ;
 
@@ -336,6 +340,8 @@ class ClientThread extends Thread {
 
         int size = header.limit(); // tamanho do array de bytes
 
+        System.out.println("Tamanho do array de bytes: " + size);
+
         byte [] bytes = header.array();
         out.write(bytes, 0, totalSize);
         out.flush();
@@ -349,8 +355,7 @@ class ClientThread extends Thread {
      * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
      * @throws IOException caso ocorra algum erro de I/O
      */
-    private void sendDeleteResponse(DataOutputStream out, byte command, byte status) throws IOException {
-
+    private void sendDeleteAndAddFileResponse(DataOutputStream out, byte command, byte status) throws IOException {
         byte[] bytes = new byte[3];
         ByteBuffer header = ByteBuffer.allocate(3);
         header.order(ByteOrder.BIG_ENDIAN);
@@ -359,6 +364,5 @@ class ClientThread extends Thread {
         header.put(status);
         out.write(header.array());
         out.flush();
-
     }
 } // class
