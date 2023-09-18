@@ -16,12 +16,6 @@ import java.nio.file.Files;
 
 public class TCPServer {
 
-    public static Logger logger = Logger.getLogger("server.log");
-
-    public static Logger getLogger() {
-        return logger;
-    }
-
     public static void main(String args[]) {
 
         try {
@@ -33,7 +27,7 @@ public class TCPServer {
             /* cria um arquivo de log para o servidor */
 
             FileHandler fh = new FileHandler("server.log"); // cria um arquivo de log
-            // Logger logger = Logger.getLogger("server.log"); // cria um logger
+            Logger logger = Logger.getLogger("server.log"); // cria um logger
             logger.addHandler(fh); // adiciona o arquivo de log ao logger
             SimpleFormatter formatter = new SimpleFormatter(); // cria um formatador
             fh.setFormatter(formatter); // adiciona o formatador ao arquivo de log
@@ -45,6 +39,7 @@ public class TCPServer {
                 Socket clientSocket = listenSocket.accept();
 
                 /* cliente conectado */
+                System.out.println("Cliente conectado ... Criando thread ...");
                 /* cria um thread para atender a conexao */
                 ClientThread c = new ClientThread(clientSocket);
 
@@ -126,11 +121,8 @@ class ClientThread extends Thread {
 
                 if (messageType == 1) { // verifica se é uma requisição
 
-                    TCPServer.logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: "
-                            + filenameSize + " | Arquivo: " + filename);
-
-                    // logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize
-                            // + " | Arquivo: " + filename);
+                    logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize
+                            + " | Arquivo: " + filename);
 
                     if (commandId == 1) {
                         handleAddFile(out, filename);
@@ -142,7 +134,6 @@ class ClientThread extends Thread {
                         handleGetFilesList();
 
                     } else if (commandId == 4) {
-                        System.out.println("Comando get file");
                         handleGetFile(out, filename);
                     }
 
@@ -202,9 +193,11 @@ class ClientThread extends Thread {
         File file = new File(serverPath + "/" + filename);
         if (file.delete()) {
             logger.info("Arquivo " + filename + " deletado com sucesso\n");
+            logger.info("Enviando resposta para o cliente");
             sendDeleteAndAddFileResponse(out, (byte) 2, (byte) 1);
         } else {
             logger.info("Erro ao deletar arquivo " + filename + "\n");
+            logger.info("Enviando resposta para o cliente");
             sendDeleteAndAddFileResponse(out, (byte) 2, (byte) 0);
         }
 
@@ -214,6 +207,8 @@ class ClientThread extends Thread {
         // Listar os arquivos no diretório de destino (no servidor)
         File file = new File(serverPath);
         File[] files = file.listFiles();
+        Logger logger = Logger.getLogger("server.log"); // pegar o logger
+
     
         List <String> filesInDir = new ArrayList<String>();
         if(file.exists()){
@@ -222,8 +217,12 @@ class ClientThread extends Thread {
                     filesInDir.add(f.getName());
                 }
             }
+            logger.info("Arquivos listados com sucesso\n");
+            logger.info("Enviando resposta para o cliente");
             sendGetFilesListResponse(out, (byte) 3, (byte) 1, filesInDir);
         } else {
+            logger.info("Erro ao listar arquivos\n");
+            logger.info("Enviando resposta para o cliente");
             sendGetFilesListResponse(out, (byte) 3, (byte) 0, filesInDir);
         }
     }
@@ -242,8 +241,8 @@ class ClientThread extends Thread {
         File srcFile = new File(serverPath + "/" + filename);
 
         if(!srcFile.exists()){
-            System.out.println("Arquivo " + filename + " não encontrado no servidor - reasd\n");
             logger.info("Arquivo " + filename + " não encontrado no servidor\n");
+            logger.info("Enviando resposta para o cliente");
             sendGetFileResponse(out, (byte) 4, (byte) 0, null); // Envie uma resposta de erro
             return;
         }
@@ -255,10 +254,12 @@ class ClientThread extends Thread {
             while ((c = fis.read()) != -1) {
                 fos.write(c);
             }
-            logger.info("Arquivo " + filename + " copiado com sucesso\n");
+            logger.info("Arquivo " + filename + " baixado com sucesso\n");
+            logger.info("Enviando resposta para o cliente");
             sendGetFileResponse(out, (byte) 4, (byte) 1, destFile);
         } catch (IOException e) {
-            logger.info("Erro ao copiar arquivo " + filename);
+            logger.info("Erro ao baixar arquivo " + filename);
+            logger.info("Enviando resposta para o cliente");
             sendGetFileResponse(out, (byte) 4, (byte) 0, destFile);
             e.printStackTrace();
         }
@@ -267,7 +268,6 @@ class ClientThread extends Thread {
     private void sendGetFilesListResponse(DataOutputStream out, byte command, byte status, List <String> files){
 
         short qtdeFiles = (short) files.size();
-        System.out.println("Quantidade de arquivos: " + qtdeFiles);
 
         int headerSize = 5;
         for (String f : files) {

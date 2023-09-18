@@ -3,7 +3,6 @@ package atividade2;
 import java.io.*;
 import java.net.*;
 import java.util.Scanner;
-import java.util.logging.Logger;
 import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -61,6 +60,7 @@ public class TCPClient {
 
                 } else {
                     System.out.println("Comando inválido");
+                    continue;
                 }
 
 
@@ -71,22 +71,20 @@ public class TCPClient {
                 byte messageType = headerBuffer.get();
                 byte commandId = headerBuffer.get();
                
-                Logger logger = TCPServer.getLogger();
-
                 /* verifica qual o tipo de comando realizado para tratar o cabeçalho corretamente */
                 if(messageType == 0x02){
                     switch(commandId){
                         case 0x01:
-                            handleDeleteAndAddFileResponse(headerBuffer, logger, commandId);
+                            handleDeleteAndAddFileResponse(headerBuffer, commandId);
                             break;
                         case 0x02:
-                            handleDeleteAndAddFileResponse(headerBuffer, logger, commandId);
+                            handleDeleteAndAddFileResponse(headerBuffer, commandId);
                             break;
                         case 0x03:
-                            handleGetFilesListResponse(headerBuffer, logger);
+                            handleGetFilesListResponse(headerBuffer);
                             break;
                         case 0x04:
-                            handleGetFileResponse(headerBuffer, logger);
+                            handleGetFileResponse(headerBuffer);
                             break;
                     }
                 }
@@ -162,38 +160,44 @@ public class TCPClient {
         out.write(header.array());
     }
     
-    private static void handleDeleteAndAddFileResponse(ByteBuffer response, Logger logger, byte commandId) throws IOException{
+    private static void handleDeleteAndAddFileResponse(ByteBuffer response, byte commandId) throws IOException{
         byte statusCode = response.get();
         
         if(commandId == 0x02){
             if (statusCode == 0x01) {
-                logger.info("Status: " + statusCode + " - Arquivo deletado com sucesso");
+                System.out.println("Status: " + statusCode + " - Arquivo deletado com sucesso");
             } else {
-                logger.info("Status: " + statusCode + " - Não foi possível deletar o arquivo");
+                System.out.println("Status: " + statusCode + " - Não foi possível deletar o arquivo");
             }
         } else if(commandId == 0x01){
             if(statusCode == 0x01){
-                logger.info("Status: " + statusCode + " - Arquivo adicionado com sucesso no servidor");
+                System.out.println("Status: " + statusCode + " - Arquivo adicionado com sucesso no servidor");
             } else{
-                logger.info("Status: " + statusCode + " - Não foi possível adicionar o arquivo no servidor");
+                System.out.println("Status: " + statusCode + " - Não foi possível adicionar o arquivo no servidor");
             }
         }
     }    
 
-    private static void handleGetFilesListResponse(ByteBuffer response, Logger logger){
+    private static void handleGetFilesListResponse(ByteBuffer response){
         byte statusCode = response.get();
         Short filesCount = response.getShort();
 
-        for (int i = 0; i < filesCount; i++) {
-            byte filenameSize = response.get();
-            byte[] filenameBytes = new byte[filenameSize];
-            response.get(filenameBytes);
-            String filename = new String(filenameBytes);
-            logger.info("Status: " + statusCode + " - " + filename);
+        System.out.println(filesCount + " arquivos encontrados: ");
+        
+        if(statusCode == 0x01){
+            for (int i = 0; i < filesCount; i++) {
+                byte filenameSize = response.get();
+                byte[] filenameBytes = new byte[filenameSize];
+                response.get(filenameBytes);
+                String filename = new String(filenameBytes);
+                System.out.println(filename);
+            }
+        } else{
+            System.out.println("Erro ao listar arquivos");
         }
     }
 
-    private static void handleGetFileResponse(ByteBuffer response, Logger logger){
+    private static void handleGetFileResponse(ByteBuffer response){
         byte statusCode = response.get();
         Integer fileSize = response.getInt();
         // int fileSizeInt = fileSize.intValue();
@@ -202,9 +206,9 @@ public class TCPClient {
         String fileContent = new String(fileBytes);
 
         if(statusCode == 1){
-            logger.info("Arquivo de " + fileSize + " baixado com sucesso!");
+            System.out.println("Arquivo de " + fileSize + " bytes baixado com sucesso" );
         } else{
-            logger.info("Erro ao baixar arquivo de " + fileSize + " bytes");
+           System.out.println("Erro ao baixar arquivo de " + fileSize + " bytes");
         }
     }
 } // class
