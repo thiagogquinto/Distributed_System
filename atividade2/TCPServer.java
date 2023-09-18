@@ -105,16 +105,19 @@ class ClientThread extends Thread {
                 byte messageType = header.get(); // tipo de mensagem (1 byte)
                 byte commandId = header.get(); // código do comando (1 byte)
                 byte filenameSize = header.get(); // tamanho do nome do arquivo (1 byte)
+                if(filenameSize < 0){
+                    filenameSize = (byte) (filenameSize + 256);
+                }
                 byte[] filenameBytes = new byte[filenameSize]; // array de bytes para o nome do arquivo
                 header.get(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
                 String filename = new String(filenameBytes); // Converte o nome do arquivo para String
 
-                if(commandId == 0x01){
-                    int fileSize = header.getInt();
-                    byte[] fileBytes = new byte[fileSize];
-                    header.get(fileBytes);
-                    // System.out.println("Tamanho do arquivo: " + fileSize);
-                }
+                // if(commandId == 0x01){
+                //     int fileSize = header.getInt();
+                //     byte[] fileBytes = new byte[fileSize];
+                //     header.get(fileBytes);
+                //     // System.out.println("Tamanho do arquivo: " + fileSize);
+                // }
 
 
                 Logger logger = Logger.getLogger("server.log"); // pegar o logger
@@ -275,8 +278,10 @@ class ClientThread extends Thread {
             while ((c = fis.read()) != -1) {
                 fos.write(c);
             }
+
             logger.info("Arquivo " + filename + " baixado com sucesso\n");
             logger.info("Enviando resposta para o cliente");
+            System.out.println("baixado aqui");
             sendGetFileResponse(out, (byte) 4, (byte) 1, destFile);
         } catch (IOException e) {
             logger.info("Erro ao baixar arquivo " + filename);
@@ -295,11 +300,11 @@ class ClientThread extends Thread {
      */
     private void sendGetFilesListResponse(DataOutputStream out, byte command, byte status, List <String> files){
 
-        short qtdeFiles = (short) files.size();
+        short qtdeFiles = (short) files.size(); 
 
         int headerSize = 5;
         for (String f : files) {
-            headerSize += 1 + f.length();
+            headerSize += 1 + f.length(); 
         }
 
         ByteBuffer header = ByteBuffer.allocate(headerSize);
@@ -319,6 +324,7 @@ class ClientThread extends Thread {
 
         byte [] bytes = header.array();
         try {
+            System.out.println("baixado aqui 2");
             out.write(bytes, 0, size);
             out.flush();
         } catch (IOException e) {
@@ -372,7 +378,7 @@ class ClientThread extends Thread {
         System.out.println("Tamanho do array de bytes: " + size);
 
         byte [] bytes = header.array();
-        out.write(bytes, 0, totalSize);
+        out.write(bytes, 0, size);
         out.flush();
     }
 

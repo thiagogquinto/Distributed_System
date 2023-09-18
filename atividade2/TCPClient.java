@@ -71,7 +71,7 @@ public class TCPClient {
                 headerBuffer.order(ByteOrder.BIG_ENDIAN);
                 byte messageType = headerBuffer.get();
                 byte commandId = headerBuffer.get();
-               
+
                 /* verifica qual o tipo de comando realizado pelo servidor para tratar o cabeçalho corretamente */
                 if(messageType == 0x02){
                     switch(commandId){
@@ -128,7 +128,6 @@ public class TCPClient {
         header.put(filename);
         // return header;
 
-        System.out.println("fileSize: " + fileSize);
         if(commandId == 0x01){
             header.putInt(fileSize);
             header.put(fileBytes);
@@ -227,12 +226,12 @@ public class TCPClient {
         byte statusCode = response.get();
         Integer fileSize = response.getInt();
         // int fileSizeInt = fileSize.intValue();
-        byte[] fileBytes = new byte[fileSize];
-        response.get(fileBytes);
-        String fileContent = new String(fileBytes);
-
+        // byte[] fileBytes = new byte[fileSize];
+        // response.get(fileBytes);
+        // String fileContent = new String(fileBytes);
+        System.out.println("Baixado aqui 3");
         if(statusCode == 1){
-            System.out.println("Arquivo de " + fileSize + " bytes baixado com sucesso" );
+            System.out.println("Arquivo de " + fileSize + " bytes baixado com sucesso");
         } else{
            System.out.println("Erro ao baixar arquivo de " + fileSize + " bytes");
         }
