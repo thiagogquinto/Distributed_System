@@ -1,6 +1,5 @@
 *.class
 *.log
 /files/
-*.txt
 /Downloads/
 *.lck
