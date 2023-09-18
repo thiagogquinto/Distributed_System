@@ -46,6 +46,7 @@ public class TCPClient {
 
                 String[] infos = buffer.split(" ");
 
+                /* verifica qual o comando digitado pelo usuário para tratar adequadamente */
                 if (infos[0].equals("ADDFILE") && infos.length == 2) {
                     sendRequest(out, (byte) 1, infos[1]);
 
@@ -71,7 +72,7 @@ public class TCPClient {
                 byte messageType = headerBuffer.get();
                 byte commandId = headerBuffer.get();
                
-                /* verifica qual o tipo de comando realizado para tratar o cabeçalho corretamente */
+                /* verifica qual o tipo de comando realizado pelo servidor para tratar o cabeçalho corretamente */
                 if(messageType == 0x02){
                     switch(commandId){
                         case 0x01:
@@ -108,11 +109,15 @@ public class TCPClient {
     } // main
 
     /**
-     * Envia uma requisição para o servidor com o comando e o nome do arquivo a ser manipulado 
-     * @param out DataOutputStream do socket do cliente para enviar a requisição
-     * @param commandId código do comando
+     * Gera um cabeçalho de requisição com os campos de ID do comando, tamanho do nome do arquivo, nome do arquivo.
+     * Caso o comando seja de adicionar arquivo, também é adicionado o tamanho do arquivo e os bytes do arquivo.
+     * 
+     * @param commandId identificador do comando
+     * @param filenameSize tamanho do nome do arquivo
      * @param filename nome do arquivo
-     * @throws IOException caso ocorra algum erro de I/O
+     * @param fileSize tamanho do arquivo
+     * @param fileBytes bytes do arquivo
+     * @return ByteBuffer com o cabeçalho da requisição
      */
     private static ByteBuffer generateReqHeader(byte commandId, byte filenameSize, byte[] filename, int fileSize, byte[] fileBytes) {
         ByteBuffer header = ByteBuffer.allocate(258 + fileSize);
@@ -134,8 +139,15 @@ public class TCPClient {
         return header;
     }
 
+    /**
+     * Função que chama a função generateReqHeader para gerar o cabeçalho da requisição e envia a requisição para o servidor.
+     * 
+     * @param out DataOutputStream do socket do cliente para enviar a requisição
+     * @param command código do comando
+     * @param filename nome do arquivo
+     * @throws IOException caso ocorra algum erro ao enviar a requisição
+     */
     private static void sendRequest(DataOutputStream out, byte command, String filename) throws IOException {
-
 
         if(command == 0x01){
             File file = new File(System.getProperty("user.dir") + "/" + filename);
@@ -159,7 +171,13 @@ public class TCPClient {
         ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filenameBytes, 0, null);
         out.write(header.array());
     }
-    
+
+    /**
+     * Função que trata a resposta do servidor para os comandos de adicionar e deletar arquivos.
+     * @param response ByteBuffer com o restante da resposta do servidor
+     * @param commandId código do comando
+     * @throws IOException caso ocorra algum erro ao ler a resposta do servidor
+     */
     private static void handleDeleteAndAddFileResponse(ByteBuffer response, byte commandId) throws IOException{
         byte statusCode = response.get();
         
@@ -178,6 +196,10 @@ public class TCPClient {
         }
     }    
 
+    /**
+     * Função que trata a resposta do servidor para o comando de listar arquivos e trata a resposta do servidor para o comando de listar arquivos.
+     * @param response ByteBuffer com o restante da resposta do servidor
+     */
     private static void handleGetFilesListResponse(ByteBuffer response){
         byte statusCode = response.get();
         Short filesCount = response.getShort();
@@ -197,6 +219,10 @@ public class TCPClient {
         }
     }
 
+    /**
+     * Função que trata a resposta do servidor para o comando de baixar arquivos.
+     * @param response ByteBuffer com o restante da resposta do servidor
+     */
     private static void handleGetFileResponse(ByteBuffer response){
         byte statusCode = response.get();
         Integer fileSize = response.getInt();

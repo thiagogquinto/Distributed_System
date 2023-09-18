@@ -156,6 +156,12 @@ class ClientThread extends Thread {
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
 
+    /**
+     * Método para adicionar um arquivo no servidor (/files)
+     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * @param filename nome do arquivo
+     * @throws IOException caso ocorra algum erro de I/O
+     */
     private void handleAddFile(DataOutputStream out, String filename) throws IOException {
         Logger logger = Logger.getLogger("server.log");
 
@@ -187,6 +193,12 @@ class ClientThread extends Thread {
         }
     }
 
+    /**
+     * Método para deletar um arquivo do servidor (/files)
+     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * @param filename nome do arquivo
+     * @throws IOException caso ocorra algum erro de I/O
+     */
     private void handleDelete(DataOutputStream out, String filename) throws IOException {
 
         Logger logger = Logger.getLogger("server.log"); // pegar o logger
@@ -203,6 +215,9 @@ class ClientThread extends Thread {
 
     }
 
+    /**
+     * Método para listar os arquivos no servidor (/files)
+     */
     private void handleGetFilesList() {
         // Listar os arquivos no diretório de destino (no servidor)
         File file = new File(serverPath);
@@ -227,6 +242,12 @@ class ClientThread extends Thread {
         }
     }
 
+    /**
+     * Método para baixar um arquivo do servidor (/files) e salvar no diretório de download do cliente
+     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * @param filename nome do arquivo
+     * @throws IOException caso ocorra algum erro de I/O
+     */
     private void handleGetFile(DataOutputStream out, String filename) throws IOException{
         Logger logger = Logger.getLogger("server.log");
 
@@ -265,6 +286,13 @@ class ClientThread extends Thread {
         }
     }
 
+    /**
+     * Envia o cabeçalho de resposta para o cliente do comando de listar os arquivos do servidor, os cabeçalhos são compostos pelos campos de tipo de mensagem, o comando, o status, o número de arquivos, sendo que para cada arquivo é enviado o tamanho do nome do arquivo e o nome do arquivo em si.
+     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * @param command byte com o código do comando
+     * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
+     * @param files lista de arquivos no servidor
+     */
     private void sendGetFilesListResponse(DataOutputStream out, byte command, byte status, List <String> files){
 
         short qtdeFiles = (short) files.size();
@@ -300,6 +328,7 @@ class ClientThread extends Thread {
     }
 
     /**
+     * Envia o cabeçalho de resposta para o cliente do comando de baixar arquivo do servidor, os cabeçalhos são compostos pelos seguintes campos: tipo de mensagem, comando, status, tamanho do arquivo e o conteúdo do arquivo.
      * 
      * @param out DataOutputStream do socket do cliente para enviar a resposta 
      * @param command byte com o código do comando, 1 para adicionar arquivo e 4 para pegar arquivo

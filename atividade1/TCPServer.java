@@ -75,6 +75,7 @@ class ClientThread extends Thread {
             while (true) {
                 buffer = in.readUTF(); /* aguarda o envio de dados */
 
+                /* de acordo com a requisição do cliente uma ação será realizado */
                 if (buffer.startsWith("CONNECT")) {
                     String[] bufferArray = buffer.split(" ");
                     String user = bufferArray[1].replace(",", "");
@@ -162,7 +163,7 @@ class ClientThread extends Thread {
 
                     buffer = dirsCount + "\n" + dirsNames;
                 }
-                out.writeUTF(buffer);
+                out.writeUTF(buffer); /* envia resposta para o cliente */
             }
         } catch (EOFException eofe) {
             System.out.println("EOF: " + eofe.getMessage());
