@@ -4,9 +4,10 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-
+import java.nio.charset.StandardCharsets;
 /**
  * Descrição: Cliente TCP simples que se conecta com o servidor e envia comandos para manipular arquivos no servidor
  * como adicionar, deletar, listar e baixar arquivos. 
@@ -38,7 +39,7 @@ public class TCPClient {
 
             /* protocolo de comunicação */
             String buffer = "";
-
+            String filenameDown = "";
             while (true) {
 
                 System.out.print("$ ");
@@ -57,8 +58,57 @@ public class TCPClient {
                     sendRequest(out, (byte) 3, "");
 
                 } else if (infos[0].equals("GETFILE") && infos.length == 2) {
+                    filenameDown = infos[1];
                     sendRequest(out, (byte) 4, infos[1]);
+                    int size = 258;
 
+                        File src = new File(System.getProperty("user.dir") + "/files/" + filenameDown);
+                    if(src.exists()){
+                        size += src.length();
+                    }
+                    
+
+                    byte [] headerBytes = new byte[size];
+                    in.read(headerBytes);
+                    ByteBuffer headerBuffer = ByteBuffer.wrap(headerBytes);
+                    headerBuffer.order(ByteOrder.BIG_ENDIAN);
+                    byte messageType = headerBuffer.get();
+                    byte commandId = headerBuffer.get();
+                    byte statusCode = headerBuffer.get();
+                    Integer fileSize = headerBuffer.getInt();
+                    // int fileSizeInt = fileSize.intValue();
+                    // byte[] fileBytes = new byte[fileSizeInt];
+                    // in.read(fileBytes);
+                    // String fileContent = new String(fileBytes);
+                    // File file = new File(System.getProperty("user.dir") + "/Downloads/" + filenameDown);
+                    // if (file.createNewFile()) {
+                    //     FileWriter writer = new FileWriter(file, true);
+                    //     BufferedWriter buf = new BufferedWriter(writer);
+                    //     buf.write(fileContent);
+                    //     buf.flush();
+                    //     buf.close();
+                    // }
+                    System.out.println("aqui");
+                    byte [] bytes = new byte[1];
+                    byte[] contentByte = new byte[fileSize];
+                    for (int i = 0; i < fileSize; i++) {
+                        in.read(bytes);
+                        byte b = bytes[0];
+                        contentByte[i] = b;
+                    }
+
+                    System.out.println("aqui 2");
+                    String content = new String(contentByte);
+                    File file = new File(System.getProperty("user.dir") + "/Downloads/" + filenameDown);
+                    if (file.createNewFile()) {
+                        FileWriter writer = new FileWriter(file, true);
+                        BufferedWriter buf = new BufferedWriter(writer);
+                        buf.write(content);
+                        buf.flush();
+                        buf.close();
+                    }
+                    continue;
+                    
                 } else {
                     System.out.println("Comando inválido");
                     continue;

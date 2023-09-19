@@ -254,14 +254,6 @@ class ClientThread extends Thread {
     private void handleGetFile(DataOutputStream out, String filename) throws IOException{
         Logger logger = Logger.getLogger("server.log");
 
-        File downloadDir = new File(downloadPath);
-
-        File destFile = new File(downloadDir + "/" + filename);
-
-        if(!downloadDir.exists()){
-            downloadDir.mkdir();
-        }
-        
         File srcFile = new File(serverPath + "/" + filename);
 
         if(!srcFile.exists()){
@@ -269,26 +261,12 @@ class ClientThread extends Thread {
             logger.info("Enviando resposta para o cliente");
             sendGetFileResponse(out, (byte) 4, (byte) 0, null); // Envie uma resposta de erro
             return;
+        } else {
+            logger.info("Arquivo " + filename + " encontrado no servidor\n");
+            logger.info("Enviando resposta para o cliente");
+            sendGetFileResponse(out, (byte) 4, (byte) 1, srcFile); // Envie uma resposta de erro
         }
 
-
-        try (FileInputStream fis = new FileInputStream(srcFile);
-                FileOutputStream fos = new FileOutputStream(downloadDir + "/" + filename)) {
-            int c;
-            while ((c = fis.read()) != -1) {
-                fos.write(c);
-            }
-
-            logger.info("Arquivo " + filename + " baixado com sucesso\n");
-            logger.info("Enviando resposta para o cliente");
-            System.out.println("baixado aqui");
-            sendGetFileResponse(out, (byte) 4, (byte) 1, destFile);
-        } catch (IOException e) {
-            logger.info("Erro ao baixar arquivo " + filename);
-            logger.info("Enviando resposta para o cliente");
-            sendGetFileResponse(out, (byte) 4, (byte) 0, destFile);
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -344,42 +322,46 @@ class ClientThread extends Thread {
      */
     private void sendGetFileResponse(DataOutputStream out, byte command, byte status, File filename) throws IOException {
 
-        long fileSize ;
+        long fileSize = 0;
 
         byte[] fileContent = new byte[0];
 
-        if (filename == null) {
-            fileSize = 0;
-        } else {
+        if (filename != null) {
             fileSize = filename.length();
             fileContent = Files.readAllBytes(filename.toPath()); 
-        }
-
+        } 
         // long fileSize = filename.length();
         
         if (fileSize > Math.pow(2, 232)) {
             throw new IllegalArgumentException("O arquivo é muito grande para ser incluído na resposta.");
         }
 
-        int headerSize = 1 + 1 + 1 + 4;
-        int fileSizeInt = (int) fileSize;
-        int totalSize = headerSize + fileSizeInt + 1;
-        ByteBuffer header = ByteBuffer.allocate(totalSize);
+        ByteBuffer header = ByteBuffer.allocate(7);
         header.order(ByteOrder.BIG_ENDIAN);
         header.put((byte) 2);
         header.put(command);
         header.put(status);
-        header.putInt(fileSizeInt); 
-        header.put(fileContent);
-        // header.position(headerSize);
-
+        header.putInt((int) fileSize);
         int size = header.limit(); // tamanho do array de bytes
+        int headerSize = header.position(); // tamanho do cabeçalho
+        int totalSize = headerSize + 1; // +1 para o byte do arquivo
+        byte[] headerBytes = header.array();
 
-        System.out.println("Tamanho do array de bytes: " + size);
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            out.write(headerBytes, 0, headerSize); // Envie o cabeçalho
 
-        byte [] bytes = header.array();
-        out.write(bytes, 0, size);
+            if (fileSize > 0) {
+                int c;
+                while ((c = fis.read()) != -1) {
+                    out.write(c); // Envie os bytes do arquivo um por um
+                }
+        }
+       
         out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**
