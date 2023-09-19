@@ -127,6 +127,8 @@ class ClientThread extends Thread {
                     logger.info("Mensagem: " + messageType + " | Comando: " + commandId + " | Tamanho: " + filenameSize
                             + " | Arquivo: " + filename);
 
+
+                    /* como o ADDFILE tem campos a mais ele é tratado aqui  */
                     if (commandId == 1) {
                         // handleAddFile(out, filename);
                         Integer fileSize = header.getInt();
