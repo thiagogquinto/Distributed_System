@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.logging.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.io.File;
 import java.nio.file.Files;
 
 public class TCPServer {
@@ -105,20 +104,16 @@ class ClientThread extends Thread {
                 byte messageType = header.get(); // tipo de mensagem (1 byte)
                 byte commandId = header.get(); // código do comando (1 byte)
                 byte filenameSize = header.get(); // tamanho do nome do arquivo (1 byte)
-                if(filenameSize < 0){
-                    filenameSize = (byte) (filenameSize + 256);
-                }
                 byte[] filenameBytes = new byte[filenameSize]; // array de bytes para o nome do arquivo
                 header.get(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
                 String filename = new String(filenameBytes); // Converte o nome do arquivo para String
 
                 // if(commandId == 0x01){
-                //     int fileSize = header.getInt();
-                //     byte[] fileBytes = new byte[fileSize];
-                //     header.get(fileBytes);
-                //     // System.out.println("Tamanho do arquivo: " + fileSize);
+                // int fileSize = header.getInt();
+                // byte[] fileBytes = new byte[fileSize];
+                // header.get(fileBytes);
+                // // System.out.println("Tamanho do arquivo: " + fileSize);
                 // }
-
 
                 Logger logger = Logger.getLogger("server.log"); // pegar o logger
 
@@ -134,8 +129,8 @@ class ClientThread extends Thread {
                         handleDelete(out, filename);
 
                     } else if (commandId == 3) {
+                        System.out.println("Listar os arquivos\n");
                         handleGetFilesList();
-
                     } else if (commandId == 4) {
                         handleGetFile(out, filename);
                     }
@@ -161,7 +156,8 @@ class ClientThread extends Thread {
 
     /**
      * Método para adicionar um arquivo no servidor (/files)
-     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * 
+     * @param out      DataOutputStream do socket do cliente para enviar a resposta
      * @param filename nome do arquivo
      * @throws IOException caso ocorra algum erro de I/O
      */
@@ -198,7 +194,8 @@ class ClientThread extends Thread {
 
     /**
      * Método para deletar um arquivo do servidor (/files)
-     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * 
+     * @param out      DataOutputStream do socket do cliente para enviar a resposta
      * @param filename nome do arquivo
      * @throws IOException caso ocorra algum erro de I/O
      */
@@ -220,16 +217,18 @@ class ClientThread extends Thread {
 
     /**
      * Método para listar os arquivos no servidor (/files)
+     * 
+     * @throws IOException
      */
-    private void handleGetFilesList() {
+    private void handleGetFilesList() throws IOException {
         // Listar os arquivos no diretório de destino (no servidor)
         File file = new File(serverPath);
         File[] files = file.listFiles();
         Logger logger = Logger.getLogger("server.log"); // pegar o logger
 
-    
-        List <String> filesInDir = new ArrayList<String>();
-        if(file.exists()){
+        List<String> filesInDir = new ArrayList<String>();
+
+        if (file.exists()) {
             for (File f : files) {
                 if (f.isFile()) {
                     filesInDir.add(f.getName());
@@ -246,31 +245,32 @@ class ClientThread extends Thread {
     }
 
     /**
-     * Método para baixar um arquivo do servidor (/files) e salvar no diretório de download do cliente
-     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * Método para baixar um arquivo do servidor (/files) e salvar no diretório de
+     * download do cliente
+     * 
+     * @param out      DataOutputStream do socket do cliente para enviar a resposta
      * @param filename nome do arquivo
      * @throws IOException caso ocorra algum erro de I/O
      */
-    private void handleGetFile(DataOutputStream out, String filename) throws IOException{
+    private void handleGetFile(DataOutputStream out, String filename) throws IOException {
         Logger logger = Logger.getLogger("server.log");
 
         File downloadDir = new File(downloadPath);
 
         File destFile = new File(downloadDir + "/" + filename);
 
-        if(!downloadDir.exists()){
+        if (!downloadDir.exists()) {
             downloadDir.mkdir();
         }
-        
+
         File srcFile = new File(serverPath + "/" + filename);
 
-        if(!srcFile.exists()){
+        if (!srcFile.exists()) {
             logger.info("Arquivo " + filename + " não encontrado no servidor\n");
             logger.info("Enviando resposta para o cliente");
             sendGetFileResponse(out, (byte) 4, (byte) 0, null); // Envie uma resposta de erro
             return;
         }
-
 
         try (FileInputStream fis = new FileInputStream(srcFile);
                 FileOutputStream fos = new FileOutputStream(downloadDir + "/" + filename)) {
@@ -278,10 +278,8 @@ class ClientThread extends Thread {
             while ((c = fis.read()) != -1) {
                 fos.write(c);
             }
-
             logger.info("Arquivo " + filename + " baixado com sucesso\n");
             logger.info("Enviando resposta para o cliente");
-            System.out.println("baixado aqui");
             sendGetFileResponse(out, (byte) 4, (byte) 1, destFile);
         } catch (IOException e) {
             logger.info("Erro ao baixar arquivo " + filename);
@@ -292,59 +290,143 @@ class ClientThread extends Thread {
     }
 
     /**
-     * Envia o cabeçalho de resposta para o cliente do comando de listar os arquivos do servidor, os cabeçalhos são compostos pelos campos de tipo de mensagem, o comando, o status, o número de arquivos, sendo que para cada arquivo é enviado o tamanho do nome do arquivo e o nome do arquivo em si.
-     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * Envia o cabeçalho de resposta para o cliente do comando de listar os arquivos
+     * do servidor, os cabeçalhos são compostos pelos campos de tipo de mensagem, o
+     * comando, o status, o número de arquivos, sendo que para cada arquivo é
+     * enviado o tamanho do nome do arquivo e o nome do arquivo em si.
+     * 
+     * @param out     DataOutputStream do socket do cliente para enviar a resposta
      * @param command byte com o código do comando
-     * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
-     * @param files lista de arquivos no servidor
+     * @param status  byte com o status da operação (0x00 para erro e 0x01 para
+     *                sucesso)
+     * @param files   lista de arquivos no servidor
+     * @throws IOException
      */
-    private void sendGetFilesListResponse(DataOutputStream out, byte command, byte status, List <String> files){
+    // private void sendGetFilesListResponse(DataOutputStream out, byte command,
+    // byte status, List<String> files) throws IOException {
+    // Logger logger = Logger.getLogger("server.log");
+    // logger.info("Iniciando envio da resposta GETFILELIST");
+    // short qtdeFiles = (short) files.size();
 
-        short qtdeFiles = (short) files.size(); 
+    // logger.info("Criando e adicionando dados no buffer");
 
-        int headerSize = 5;
-        for (String f : files) {
-            headerSize += 1 + f.length(); 
-        }
+    // ByteBuffer header = ByteBuffer.allocate(3);
+    // header.order(ByteOrder.BIG_ENDIAN);
+    // header.put((byte) 2);
+    // header.put(command);
+    // header.put(status);
+    // // header.putShort(qtdeFiles);
 
-        ByteBuffer header = ByteBuffer.allocate(headerSize);
+    // byte[] bytes = new byte[259];
+    // bytes = header.array();
+    // int size = header.limit();
+    // out.write(bytes, 0, size);
+    // out.flush();
+
+    // logger.info("Criando e adicionando dados no buffer");
+    // header = ByteBuffer.allocate(2);
+    // header.put((byte) ((qtdeFiles >> 8) & 0xFF)); // INSERINDO BYTE MAIS
+    // SIGNIFICATIVO
+    // header.put((byte) (qtdeFiles & 0xFF)); // INSERINDO BYTE MENOS SIGNIFICATIVO
+
+    // bytes = header.array();
+    // size = header.limit();
+
+    // out.write(bytes, 0, size);
+    // out.flush();
+
+    // for (String fileName : files) {
+    // byte[] filenameInBytes = fileName.getBytes();
+    // byte filenameLength = (byte) fileName.length();
+
+    // out.write(filenameLength);
+    // out.flush();
+
+    // logger.info("Enviando nomes dos arquivos byte a byte");
+    // for (int i = 0; i < filenameLength; i++) {
+    // logger.info("Enviou byte: " + filenameInBytes[i]);
+    // out.write(filenameInBytes[i]);
+    // out.flush();
+    // }
+    // }
+
+    // // ByteBuffer header = ByteBuffer.allocate(headerSize);
+    // // header.order(ByteOrder.BIG_ENDIAN);
+    // // header.put((byte) 2);
+    // // header.put(command);
+    // // header.put(status);
+    // // header.putShort(qtdeFiles);
+
+    // // for (String f : files) {
+    // // header.put((byte) f.length());
+    // // byte[] filenameBytes = f.getBytes();
+    // // header.put(filenameBytes);
+    // // }
+
+    // // int size = header.limit(); // tamanho do array de bytes
+
+    // // byte [] bytes = header.array();
+    // // System.out.println("ARRAY" + header.array());
+    // // try {
+    // // out.write(bytes, 0, size);
+    // // out.flush();
+    // // } catch (IOException e) {
+    // // e.printStackTrace();
+    // // }
+
+    // }
+
+    private void sendGetFilesListResponse(DataOutputStream out, byte command, byte status, List<String> files)
+            throws IOException {
+        Logger logger = Logger.getLogger("server.log");
+        logger.info("Iniciando envio da resposta GETFILELIST");
+        short qtdeFiles = (short) files.size();
+
+        logger.info("Criando e adicionando dados no buffer");
+
+        // Crie um único ByteBuffer para o cabeçalho
+        ByteBuffer header = ByteBuffer.allocate(5);
         header.order(ByteOrder.BIG_ENDIAN);
         header.put((byte) 2);
         header.put(command);
         header.put(status);
         header.putShort(qtdeFiles);
 
-        for (String f : files) {
-            header.put((byte) f.length());
-            byte[] filenameBytes = f.getBytes();
-            header.put(filenameBytes);
+        // Escreva o cabeçalho no DataOutputStream
+        out.write(header.array());
+
+        // Escreva os nomes dos arquivos
+        for (String fileName : files) {
+            byte[] filenameInBytes = fileName.getBytes();
+            byte filenameLength = (byte) fileName.length();
+
+            out.write(filenameLength);
+            out.write(filenameInBytes);
+
+            logger.info("Enviando nome do arquivo: " + fileName);
         }
 
-        int size = header.limit(); // tamanho do array de bytes
-
-        byte [] bytes = header.array();
-        try {
-            System.out.println("baixado aqui 2");
-            out.write(bytes, 0, size);
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        // Finalmente, chame flush uma vez após escrever todos os dados
+        out.flush();
     }
 
     /**
-     * Envia o cabeçalho de resposta para o cliente do comando de baixar arquivo do servidor, os cabeçalhos são compostos pelos seguintes campos: tipo de mensagem, comando, status, tamanho do arquivo e o conteúdo do arquivo.
+     * Envia o cabeçalho de resposta para o cliente do comando de baixar arquivo do
+     * servidor, os cabeçalhos são compostos pelos seguintes campos: tipo de
+     * mensagem, comando, status, tamanho do arquivo e o conteúdo do arquivo.
      * 
-     * @param out DataOutputStream do socket do cliente para enviar a resposta 
-     * @param command byte com o código do comando, 1 para adicionar arquivo e 4 para pegar arquivo
-     * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
+     * @param out      DataOutputStream do socket do cliente para enviar a resposta
+     * @param command  byte com o código do comando, 1 para adicionar arquivo e 4
+     *                 para pegar arquivo
+     * @param status   byte com o status da operação (0x00 para erro e 0x01 para
+     *                 sucesso)
      * @param filename caminho do arquivo no qual foi feita a operação
      * @throws IOException caso ocorra algum erro de I/O
      */
-    private void sendGetFileResponse(DataOutputStream out, byte command, byte status, File filename) throws IOException {
+    private void sendGetFileResponse(DataOutputStream out, byte command, byte status, File filename)
+            throws IOException {
 
-        long fileSize ;
+        long fileSize;
 
         byte[] fileContent = new byte[0];
 
@@ -352,11 +434,11 @@ class ClientThread extends Thread {
             fileSize = 0;
         } else {
             fileSize = filename.length();
-            fileContent = Files.readAllBytes(filename.toPath()); 
+            fileContent = Files.readAllBytes(filename.toPath());
         }
 
         // long fileSize = filename.length();
-        
+
         if (fileSize > Math.pow(2, 232)) {
             throw new IllegalArgumentException("O arquivo é muito grande para ser incluído na resposta.");
         }
@@ -369,7 +451,7 @@ class ClientThread extends Thread {
         header.put((byte) 2);
         header.put(command);
         header.put(status);
-        header.putInt(fileSizeInt); 
+        header.putInt(fileSizeInt);
         header.put(fileContent);
         // header.position(headerSize);
 
@@ -377,17 +459,20 @@ class ClientThread extends Thread {
 
         System.out.println("Tamanho do array de bytes: " + size);
 
-        byte [] bytes = header.array();
-        out.write(bytes, 0, size);
+        byte[] bytes = header.array();
+        out.write(bytes, 0, totalSize);
         out.flush();
     }
 
     /**
-     * Envia o cabeçalho de resposta para o cliente do comando de deletar arquivo do servidor, os cabeçalhos são compostos por 3 bytes, sendo o primeiro o tipo de mensagem, o segundo o comando e o terceiro o status
+     * Envia o cabeçalho de resposta para o cliente do comando de deletar arquivo do
+     * servidor, os cabeçalhos são compostos por 3 bytes, sendo o primeiro o tipo de
+     * mensagem, o segundo o comando e o terceiro o status
      * 
-     * @param out DataOutputStream do socket do cliente para enviar a resposta
+     * @param out     DataOutputStream do socket do cliente para enviar a resposta
      * @param command byte com o código do comando
-     * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
+     * @param status  byte com o status da operação (0x00 para erro e 0x01 para
+     *                sucesso)
      * @throws IOException caso ocorra algum erro de I/O
      */
     private void sendDeleteAndAddFileResponse(DataOutputStream out, byte command, byte status) throws IOException {
