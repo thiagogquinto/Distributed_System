@@ -99,9 +99,11 @@ class ClientThread extends Thread {
                         System.out.println(bufferArray[0]);
                         buffer = "ERROR";
                     } else {
-                        if (bufferArray[1].split("/").length == 1 || !bufferArray[1].contains("/")) {
+                        if (bufferArray[1].split("/").length == 1) {
                             String path = bufferArray[1];
                             File file = new File(path);
+                            
+                            bufferArray[1] = bufferArray[1].replace("/", "");
 
                             if (bufferArray[1].equals("..")) {
                                 path = currentDirectory.substring(0, currentDirectory.lastIndexOf("/"));
