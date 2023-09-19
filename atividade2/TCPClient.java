@@ -87,6 +87,13 @@ public class TCPClient {
                         }
 
                         String content = new String(contentByte);
+                        
+                        File downloadDir = new File(System.getProperty("user.dir") + "/Downloads");
+
+                        if(!downloadDir.exists()){
+                            downloadDir.mkdir();
+                        }
+
                         File file = new File(System.getProperty("user.dir") + "/Downloads/" + filenameDown);
                         if (file.createNewFile()) {
                             FileWriter writer = new FileWriter(file, true);

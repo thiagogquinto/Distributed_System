@@ -9,8 +9,7 @@ import java.util.Scanner;
 
 /**
  * Descrição: Cliente TCP simples que se conecta com o servidor e envia comandos
- * para manipular dados no servidor como
- * diretorios e arquivos.
+ * para manipular dados no servidor como diretórios e arquivos.
  * 
  * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
  * 

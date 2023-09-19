@@ -39,7 +39,7 @@ public class TCPServer {
                 Socket clientSocket = listenSocket.accept();
 
                 /* cliente conectado */
-                System.out.println("Cliente conectado ... Criando thread ...");
+                logger.info("Cliente conectado ... Criando thread ...");
                 /* cria um thread para atender a conexao */
                 ClientThread c = new ClientThread(clientSocket);
 
@@ -57,8 +57,8 @@ public class TCPServer {
 
 /**
  * Classe ClientThread: Thread responsavel pela comunicacao
- * Descricao: Rebebe um socket, cria os objetos de leitura e escrita,
- * aguarda msgs clientes e responde com a msg + :OK
+ * Descricao: Recebe um socket, cria os objetos de leitura e escrita,
+ * 
  */
 
 class ClientThread extends Thread {
@@ -158,8 +158,6 @@ class ClientThread extends Thread {
                         } else {
                             sendDeleteAndAddFileResponse(out, commandId, (byte) 0);
                         }
-                        
-                    
 
                     } else if (commandId == 2) {
                         handleDelete(out, filename);
@@ -242,6 +240,7 @@ class ClientThread extends Thread {
 
     /**
      * Método para baixar um arquivo do servidor (/files) e salvar no diretório de download do cliente
+     * 
      * @param out DataOutputStream do socket do cliente para enviar a resposta
      * @param filename nome do arquivo
      * @throws IOException caso ocorra algum erro de I/O
@@ -265,7 +264,10 @@ class ClientThread extends Thread {
     }
 
     /**
-     * Envia o cabeçalho de resposta para o cliente do comando de listar os arquivos do servidor, os cabeçalhos são compostos pelos campos de tipo de mensagem, o comando, o status, o número de arquivos, sendo que para cada arquivo é enviado o tamanho do nome do arquivo e o nome do arquivo em si.
+     * Envia o cabeçalho de resposta para o cliente do comando de listar os arquivos do servidor, os cabeçalhos são 
+     * compostos pelos campos de tipo de mensagem, o comando, o status, o número de arquivos, sendo que para cada 
+     * arquivo é enviado o tamanho do nome do arquivo e o nome do arquivo em si.
+     * 
      * @param out DataOutputStream do socket do cliente para enviar a resposta
      * @param command byte com o código do comando
      * @param status byte com o status da operação (0x00 para erro e 0x01 para sucesso)
@@ -306,7 +308,8 @@ class ClientThread extends Thread {
     }
 
     /**
-     * Envia o cabeçalho de resposta para o cliente do comando de baixar arquivo do servidor, os cabeçalhos são compostos pelos seguintes campos: tipo de mensagem, comando, status, tamanho do arquivo e o conteúdo do arquivo.
+     * Envia o cabeçalho de resposta para o cliente do comando de baixar arquivo do servidor, os cabeçalhos são 
+     * compostos pelos seguintes campos: tipo de mensagem, comando, status, tamanho do arquivo e o conteúdo do arquivo.
      * 
      * @param out DataOutputStream do socket do cliente para enviar a resposta 
      * @param command byte com o código do comando, 1 para adicionar arquivo e 4 para pegar arquivo
@@ -339,7 +342,10 @@ class ClientThread extends Thread {
         int totalSize = headerSize + 1; // +1 para o byte do arquivo
         byte[] headerBytes = header.array();
 
+
         if (fileSize > 0) {
+            Logger logger = Logger.getLogger("server.log");
+            logger.info("Mandando byte a byte para cliente");
              try (FileInputStream fis = new FileInputStream(filename)) {
             out.write(headerBytes, 0, headerSize); // Envie o cabeçalho
 
@@ -363,7 +369,8 @@ class ClientThread extends Thread {
     }
 
     /**
-     * Envia o cabeçalho de resposta para o cliente do comando de deletar arquivo do servidor, os cabeçalhos são compostos por 3 bytes, sendo o primeiro o tipo de mensagem, o segundo o comando e o terceiro o status
+     * Envia o cabeçalho de resposta para o cliente do comando de deletar arquivo do servidor, os cabeçalhos são 
+     * compostos por 3 bytes, sendo o primeiro o tipo de mensagem, o segundo o comando e o terceiro o status.
      * 
      * @param out DataOutputStream do socket do cliente para enviar a resposta
      * @param command byte com o código do comando
