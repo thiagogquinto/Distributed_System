@@ -93,24 +93,24 @@ class ClientThread extends Thread {
     public void run() {
         try {
 
+            int size = 258;
             while (true) {
 
                 String buffer = "";
 
                 byte[] request = new byte[258];
-                ByteBuffer header = ByteBuffer.allocate(258);
+                // ByteBuffer header = ByteBuffer.allocate(258);
                 in.read(request);
-                header = ByteBuffer.wrap(request); // cria um buffer com o array de bytes recebido
+                ByteBuffer header = ByteBuffer.wrap(request); // cria um buffer com o array de bytes recebido
                 header.order(ByteOrder.BIG_ENDIAN); // define a ordem dos bytes (BIG_ENDIAN)
                 byte messageType = header.get(); // tipo de mensagem (1 byte)
                 byte commandId = header.get(); // código do comando (1 byte)
                 byte filenameSize = header.get(); // tamanho do nome do arquivo (1 byte)
-                if(filenameSize < 0){
-                    filenameSize = (byte) (filenameSize + 256);
-                }
+               
                 byte[] filenameBytes = new byte[filenameSize]; // array de bytes para o nome do arquivo
                 header.get(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
                 String filename = new String(filenameBytes); // Converte o nome do arquivo para String
+                // Integer fileSize = header.getInt(); // tamanho do arquivo (4 bytes)
 
                 // if(commandId == 0x01){
                 //     int fileSize = header.getInt();
@@ -128,7 +128,39 @@ class ClientThread extends Thread {
                             + " | Arquivo: " + filename);
 
                     if (commandId == 1) {
-                        handleAddFile(out, filename);
+                        // handleAddFile(out, filename);
+                        Integer fileSize = header.getInt();
+                        System.out.println("Tamanho do arquivo: " + fileSize);
+                        byte [] bytes = new byte[1];
+                        byte[] contentByte = new byte[fileSize];
+                    for (int i = 0; i < fileSize; i++) {
+                        in.read(bytes);
+                        byte b = bytes[0];
+                        contentByte[i] = b;
+                    }
+
+                    int worked = 0;
+                    String content = new String(contentByte);
+                    File file = new File(System.getProperty("user.dir") + "/files/" + filename);
+                    if (file.createNewFile()) {
+                        FileWriter writer = new FileWriter(file, true);
+                        BufferedWriter buf = new BufferedWriter(writer);
+                        buf.write(content);
+                        buf.flush();
+                        buf.close();
+                        worked = 1;
+                    }
+
+                    if(worked == 1){
+                        logger.info("Arquivo " + filename + " copiado com sucesso\n");
+                        logger.info("Enviando resposta para o cliente");
+                        sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 1);
+                    } else {
+                        logger.info("Erro ao copiar arquivo " + filename);
+                        logger.info("Enviando resposta para o cliente");
+                        sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 0);
+                    }
+                   
 
                     } else if (commandId == 2) {
                         handleDelete(out, filename);

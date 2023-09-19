@@ -49,20 +49,20 @@ public class TCPClient {
 
                 /* verifica qual o comando digitado pelo usuário para tratar adequadamente */
                 if (infos[0].equals("ADDFILE") && infos.length == 2) {
-                    sendRequest(out, (byte) 1, infos[1]);
+                    sendAddFileRequest(out, (byte) 1, infos[1]);
 
                 } else if (infos[0].equals("DELETE") && infos.length == 2) {
-                    sendRequest(out, (byte) 2, infos[1]);
+                    sendCommonRequests(out, (byte) 2, infos[1]);
 
                 } else if (infos[0].equals("GETFILESLIST") && infos.length == 1) {
-                    sendRequest(out, (byte) 3, "");
+                    sendCommonRequests(out, (byte) 3, "");
 
                 } else if (infos[0].equals("GETFILE") && infos.length == 2) {
                     filenameDown = infos[1];
-                    sendRequest(out, (byte) 4, infos[1]);
+                    sendCommonRequests(out, (byte) 4, infos[1]);
                     int size = 258;
 
-                        File src = new File(System.getProperty("user.dir") + "/files/" + filenameDown);
+                    File src = new File(System.getProperty("user.dir") + "/files/" + filenameDown);
                     if(src.exists()){
                         size += src.length();
                     }
@@ -169,22 +169,13 @@ public class TCPClient {
      * @param fileBytes bytes do arquivo
      * @return ByteBuffer com o cabeçalho da requisição
      */
-    private static ByteBuffer generateReqHeader(byte commandId, byte filenameSize, byte[] filename, int fileSize, byte[] fileBytes) {
-        ByteBuffer header = ByteBuffer.allocate(258 + fileSize);
+    private static ByteBuffer generateReqHeader(byte commandId, byte filenameSize, byte[] filename) {
+        ByteBuffer header = ByteBuffer.allocate(258);
         header.order(ByteOrder.BIG_ENDIAN);
         header.put((byte) 1);
         header.put(commandId);
         header.put(filenameSize);
         header.put(filename);
-        // return header;
-
-        if(commandId == 0x01){
-            header.putInt(fileSize);
-            header.put(fileBytes);
-        }
-
-        System.out.println("header: " + header);
-
         return header;
     }
 
@@ -196,29 +187,47 @@ public class TCPClient {
      * @param filename nome do arquivo
      * @throws IOException caso ocorra algum erro ao enviar a requisição
      */
-    private static void sendRequest(DataOutputStream out, byte command, String filename) throws IOException {
+    private static void sendCommonRequests(DataOutputStream out, byte command, String filename) throws IOException {
+        ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filename.getBytes());
+        int size = header.limit(); // tamanho do array de bytes
+        int headerSize = header.position(); // tamanho do cabeçalho
+        byte[] headerBytes = header.array();
+        out.write(headerBytes, 0, headerSize);
+        out.flush();
+    }
 
-        if(command == 0x01){
-            File file = new File(System.getProperty("user.dir") + "/" + filename);
 
-            if(!file.exists()){
-                byte[] fileBytes = new byte[0];
-                ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filename.getBytes(), 0, fileBytes);
-                out.write(header.array());
-                return;
+    private static void sendAddFileRequest(DataOutputStream out,  byte command, String filename) throws IOException{
+        byte filenameSize = (byte) filename.length();
+        byte [] filenameBytes = filename.getBytes();
+        File srcFile = new File(System.getProperty("user.dir") + "/" + filename);
+        long fileSize = srcFile.length();
+        int fileSizeInt = (int) fileSize;
+
+        ByteBuffer header = ByteBuffer.allocate(262);
+        header.order(ByteOrder.BIG_ENDIAN);
+        header.put((byte) 1);
+        header.put(command);
+        header.put(filenameSize);
+        header.put(filenameBytes);
+        header.putInt(fileSizeInt);
+        int size = header.limit(); // tamanho do array de bytes
+        int headerSize = header.position(); // tamanho do cabeçalho
+        byte[] headerBytes = header.array();
+        // out.write(headerBytes, 0, headerSize);
+
+        try (FileInputStream fis = new FileInputStream(srcFile)) {
+            out.write(headerBytes, 0, headerSize); // Envie o cabeçalho
+
+            if (fileSize > 0) {
+                int c;
+                while ((c = fis.read()) != -1) {
+                    out.write(c); // Envie os bytes do arquivo um por um
+                }
             }
-
-            long fileSize = file.length();
-            int fileSizeInt = (int) fileSize;
-            byte[] fileBytes = new byte[fileSizeInt];
-            fileBytes = Files.readAllBytes(file.toPath());
-            ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filename.getBytes(), fileSizeInt, fileBytes);
-            out.write(header.array());
-            return;
         }
-        byte[] filenameBytes = filename.getBytes();
-        ByteBuffer header = generateReqHeader(command, (byte) filename.length(), filenameBytes, 0, null);
-        out.write(header.array());
+
+        out.flush();
     }
 
     /**
