@@ -67,7 +67,10 @@ class ClientThread extends Thread {
         } // catch
     } // construtor
 
-    /* metodo executado ao iniciar a thread - start() */
+    /**
+     * metodo executado ao iniciar a thread - start() 
+     * Descricao: aguarda o envio de dados pelo cliente e realiza a ação desejada
+     */
     @Override
     public void run() {
         try {
@@ -136,12 +139,12 @@ class ClientThread extends Thread {
                         }
                     }
                 } else if (buffer.equals("GETFILES")) {
-                    File file = new File(currentDirectory);
-                    File[] files = file.listFiles();
+                    File file = new File(currentDirectory); // diretório atual 
+                    File[] files = file.listFiles(); // lista de arquivos e diretórios do diretório atual
                     Integer filesCount = 0;
                     String filesNames = "";
                     for (File f : files) {
-                        if (f.isFile()) {
+                        if (f.isFile()) { // se for arquivo
                             filesCount++;
                             filesNames += f.getName() + "\n";
                         }
@@ -155,7 +158,7 @@ class ClientThread extends Thread {
                     Integer dirsCount = 0;
                     String dirsNames = "";
                     for (File f : files) {
-                        if (f.isDirectory()) {
+                        if (f.isDirectory()) { // se for diretório
                             dirsCount++;
                             dirsNames += f.getName() + "\n";
                         }

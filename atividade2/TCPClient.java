@@ -49,7 +49,7 @@ public class TCPClient {
 
                 /* verifica qual o comando digitado pelo usuário para tratar adequadamente */
                 if (infos[0].equals("ADDFILE") && infos.length == 2) {
-                    sendAddFileRequest(out, (byte) 1, infos[1]);
+                    sendAddFileRequest(out, (byte) 1, infos[1]); // envia requisição para adicionar arquivo no servidor
 
                 } else if (infos[0].equals("DELETE") && infos.length == 2) {
                     sendCommonRequests(out, (byte) 2, infos[1]);
@@ -76,37 +76,30 @@ public class TCPClient {
                     byte commandId = headerBuffer.get();
                     byte statusCode = headerBuffer.get();
                     Integer fileSize = headerBuffer.getInt();
-                    // int fileSizeInt = fileSize.intValue();
-                    // byte[] fileBytes = new byte[fileSizeInt];
-                    // in.read(fileBytes);
-                    // String fileContent = new String(fileBytes);
-                    // File file = new File(System.getProperty("user.dir") + "/Downloads/" + filenameDown);
-                    // if (file.createNewFile()) {
-                    //     FileWriter writer = new FileWriter(file, true);
-                    //     BufferedWriter buf = new BufferedWriter(writer);
-                    //     buf.write(fileContent);
-                    //     buf.flush();
-                    //     buf.close();
-                    // }
-                    System.out.println("aqui");
-                    byte [] bytes = new byte[1];
-                    byte[] contentByte = new byte[fileSize];
-                    for (int i = 0; i < fileSize; i++) {
-                        in.read(bytes);
-                        byte b = bytes[0];
-                        contentByte[i] = b;
-                    }
+                  
+                    if(fileSize > 0 && statusCode == 1){
+                         byte [] bytes = new byte[1];
+                        byte[] contentByte = new byte[fileSize];
+                        for (int i = 0; i < fileSize; i++) {
+                            in.read(bytes);
+                            byte b = bytes[0];
+                            contentByte[i] = b;
+                        }
 
-                    System.out.println("aqui 2");
-                    String content = new String(contentByte);
-                    File file = new File(System.getProperty("user.dir") + "/Downloads/" + filenameDown);
-                    if (file.createNewFile()) {
-                        FileWriter writer = new FileWriter(file, true);
-                        BufferedWriter buf = new BufferedWriter(writer);
-                        buf.write(content);
-                        buf.flush();
-                        buf.close();
+                        String content = new String(contentByte);
+                        File file = new File(System.getProperty("user.dir") + "/Downloads/" + filenameDown);
+                        if (file.createNewFile()) {
+                            FileWriter writer = new FileWriter(file, true);
+                            BufferedWriter buf = new BufferedWriter(writer);
+                            buf.write(content);
+                            buf.flush();
+                            buf.close();
+                        }
+                        System.out.println("Arquivo solictado baixado com sucesso no diretório Downloads");
+                    } else{
+                        System.out.println("Erro ao baixar arquivo de solicitado ");
                     }
+                   
                     continue;
                     
                 } else {
@@ -134,9 +127,6 @@ public class TCPClient {
                         case 0x03:
                             handleGetFilesListResponse(headerBuffer);
                             break;
-                        case 0x04:
-                            handleGetFileResponse(headerBuffer);
-                            break;
                     }
                 }
             }
@@ -159,8 +149,7 @@ public class TCPClient {
     } // main
 
     /**
-     * Gera um cabeçalho de requisição com os campos de ID do comando, tamanho do nome do arquivo, nome do arquivo.
-     * Caso o comando seja de adicionar arquivo, também é adicionado o tamanho do arquivo e os bytes do arquivo.
+     * Gera um cabeçalho de requisição com os campos de , tipo do cabeçalho, ID do comando, tamanho do nome do arquivo, nome do arquivo.
      * 
      * @param commandId identificador do comando
      * @param filenameSize tamanho do nome do arquivo
@@ -196,12 +185,27 @@ public class TCPClient {
         out.flush();
     }
 
-
+    /**
+     * Função que lida com o envio de requisição para adicionar arquivos no servidor. Este cabeçalho possui os * seguintes campos: tipo do cabeçalho, commandId, filenameSize, filename, fileSize e fileBytes.
+     * 
+     * @param out DataOutputStream do socket do cliente para enviar a requisição
+     * @param command código do comando
+     * @param filename nome do arquivo
+     * @throws IOException caso ocorra algum erro ao enviar a requisição
+     */
     private static void sendAddFileRequest(DataOutputStream out,  byte command, String filename) throws IOException{
         byte filenameSize = (byte) filename.length();
         byte [] filenameBytes = filename.getBytes();
         File srcFile = new File(System.getProperty("user.dir") + "/" + filename);
-        long fileSize = srcFile.length();
+
+        long fileSize;
+        
+        if (!srcFile.exists()) {
+            fileSize = 0;
+        }
+        else{
+            fileSize = srcFile.length();
+        }
         int fileSizeInt = (int) fileSize;
 
         ByteBuffer header = ByteBuffer.allocate(262);
@@ -214,9 +218,12 @@ public class TCPClient {
         int size = header.limit(); // tamanho do array de bytes
         int headerSize = header.position(); // tamanho do cabeçalho
         byte[] headerBytes = header.array();
-        // out.write(headerBytes, 0, headerSize);
-
-        try (FileInputStream fis = new FileInputStream(srcFile)) {
+        
+        if(!srcFile.exists()){
+            System.out.println("Arquivo não encontrado: " + srcFile);
+            out.write(headerBytes, 0, headerSize);
+        } else{
+           try (FileInputStream fis = new FileInputStream(srcFile)) {
             out.write(headerBytes, 0, headerSize); // Envie o cabeçalho
 
             if (fileSize > 0) {
@@ -225,13 +232,15 @@ public class TCPClient {
                     out.write(c); // Envie os bytes do arquivo um por um
                 }
             }
+        } 
         }
 
         out.flush();
     }
 
     /**
-     * Função que trata a resposta do servidor para os comandos de adicionar e deletar arquivos.
+     * Função que trata a resposta do servidor para os comandos de adicionar e deletar arquivos. Possui os seguintes campos: tipo do cabeçalho, commandId e statusCode.
+     * 
      * @param response ByteBuffer com o restante da resposta do servidor
      * @param commandId código do comando
      * @throws IOException caso ocorra algum erro ao ler a resposta do servidor
@@ -243,13 +252,13 @@ public class TCPClient {
             if (statusCode == 0x01) {
                 System.out.println("Status: " + statusCode + " - Arquivo deletado com sucesso");
             } else {
-                System.out.println("Status: " + statusCode + " - Não foi possível deletar o arquivo");
+                System.out.println("Status: " + statusCode + " - Erro ao deletar o arquivo");
             }
         } else if(commandId == 0x01){
             if(statusCode == 0x01){
                 System.out.println("Status: " + statusCode + " - Arquivo adicionado com sucesso no servidor");
             } else{
-                System.out.println("Status: " + statusCode + " - Não foi possível adicionar o arquivo no servidor");
+                System.out.println("Status: " + statusCode + " - Erro ao adicionar o arquivo no servidor");
             }
         }
     }    
@@ -265,6 +274,7 @@ public class TCPClient {
         System.out.println(filesCount + " arquivos encontrados: ");
         
         if(statusCode == 0x01){
+            /* itera lendo cada nome de arquivo retornado no cabeçalho */
             for (int i = 0; i < filesCount; i++) {
                 byte filenameSize = response.get();
                 byte[] filenameBytes = new byte[filenameSize];
@@ -277,22 +287,4 @@ public class TCPClient {
         }
     }
 
-    /**
-     * Função que trata a resposta do servidor para o comando de baixar arquivos.
-     * @param response ByteBuffer com o restante da resposta do servidor
-     */
-    private static void handleGetFileResponse(ByteBuffer response){
-        byte statusCode = response.get();
-        Integer fileSize = response.getInt();
-        // int fileSizeInt = fileSize.intValue();
-        // byte[] fileBytes = new byte[fileSize];
-        // response.get(fileBytes);
-        // String fileContent = new String(fileBytes);
-        System.out.println("Baixado aqui 3");
-        if(statusCode == 1){
-            System.out.println("Arquivo de " + fileSize + " bytes baixado com sucesso");
-        } else{
-           System.out.println("Erro ao baixar arquivo de " + fileSize + " bytes");
-        }
-    }
 } // class

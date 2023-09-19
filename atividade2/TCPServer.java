@@ -110,16 +110,7 @@ class ClientThread extends Thread {
                 byte[] filenameBytes = new byte[filenameSize]; // array de bytes para o nome do arquivo
                 header.get(filenameBytes); // Lê o nome do arquivo (tamanho variável) em bytes
                 String filename = new String(filenameBytes); // Converte o nome do arquivo para String
-                // Integer fileSize = header.getInt(); // tamanho do arquivo (4 bytes)
-
-                // if(commandId == 0x01){
-                //     int fileSize = header.getInt();
-                //     byte[] fileBytes = new byte[fileSize];
-                //     header.get(fileBytes);
-                //     // System.out.println("Tamanho do arquivo: " + fileSize);
-                // }
-
-
+               
                 Logger logger = Logger.getLogger("server.log"); // pegar o logger
 
                 if (messageType == 1) { // verifica se é uma requisição
@@ -130,39 +121,45 @@ class ClientThread extends Thread {
 
                     /* como o ADDFILE tem campos a mais ele é tratado aqui  */
                     if (commandId == 1) {
-                        // handleAddFile(out, filename);
                         Integer fileSize = header.getInt();
                         System.out.println("Tamanho do arquivo: " + fileSize);
-                        byte [] bytes = new byte[1];
-                        byte[] contentByte = new byte[fileSize];
-                    for (int i = 0; i < fileSize; i++) {
-                        in.read(bytes);
-                        byte b = bytes[0];
-                        contentByte[i] = b;
-                    }
+                        
+                        if(fileSize.intValue() > 0){
+                            byte [] bytes = new byte[1];
+                            byte[] contentByte = new byte[fileSize];
+                            
+                            for (int i = 0; i < fileSize; i++) {
+                                in.read(bytes);
+                                byte b = bytes[0];
+                                contentByte[i] = b;
+                            }
 
-                    int worked = 0;
-                    String content = new String(contentByte);
-                    File file = new File(System.getProperty("user.dir") + "/files/" + filename);
-                    if (file.createNewFile()) {
-                        FileWriter writer = new FileWriter(file, true);
-                        BufferedWriter buf = new BufferedWriter(writer);
-                        buf.write(content);
-                        buf.flush();
-                        buf.close();
-                        worked = 1;
-                    }
+                            int worked = 0;
+                            String content = new String(contentByte);
+                            File file = new File(System.getProperty("user.dir") + "/files/" + filename);
+                            if (file.createNewFile()) {
+                                FileWriter writer = new FileWriter(file, true);
+                                BufferedWriter buf = new BufferedWriter(writer);
+                                buf.write(content);
+                                buf.flush();
+                                buf.close();
+                                worked = 1;
+                            }
 
-                    if(worked == 1){
-                        logger.info("Arquivo " + filename + " copiado com sucesso\n");
-                        logger.info("Enviando resposta para o cliente");
-                        sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 1);
-                    } else {
-                        logger.info("Erro ao copiar arquivo " + filename);
-                        logger.info("Enviando resposta para o cliente");
-                        sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 0);
-                    }
-                   
+                            if(worked == 1){
+                                logger.info("Arquivo " + filename + " copiado com sucesso\n");
+                                logger.info("Enviando resposta para o cliente");
+                                sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 1);
+                            } else {
+                                logger.info("Erro ao copiar arquivo " + filename);
+                                logger.info("Enviando resposta para o cliente");
+                                sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 0);
+                            }
+                        } else {
+                            sendDeleteAndAddFileResponse(out, commandId, (byte) 0);
+                        }
+                        
+                    
 
                     } else if (commandId == 2) {
                         handleDelete(out, filename);
@@ -193,43 +190,7 @@ class ClientThread extends Thread {
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
 
-    /**
-     * Método para adicionar um arquivo no servidor (/files)
-     * @param out DataOutputStream do socket do cliente para enviar a resposta
-     * @param filename nome do arquivo
-     * @throws IOException caso ocorra algum erro de I/O
-     */
-    private void handleAddFile(DataOutputStream out, String filename) throws IOException {
-        Logger logger = Logger.getLogger("server.log");
-
-        File srcFile = new File(localPath + "/" + filename);
-        File destFile = new File(serverPath + "/" + filename);
-
-        if (!srcFile.exists()) {
-            logger.info("Arquivo " + filename + " não encontrado no cliente\n");
-            sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 0); // Envie uma resposta de erro
-            return;
-        }
-
-        try (FileInputStream fis = new FileInputStream(srcFile);
-                FileOutputStream fos = new FileOutputStream(destFile)) {
-
-            int c;
-            while ((c = fis.read()) != -1) {
-                fos.write(c);
-            }
-
-            logger.info("Arquivo " + filename + " copiado com sucesso\n");
-            logger.info("Enviando resposta para o cliente");
-            sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 1);
-        } catch (IOException e) {
-            logger.info("Erro ao copiar arquivo " + filename);
-            e.printStackTrace();
-            logger.info("Enviando resposta para o cliente");
-            sendDeleteAndAddFileResponse(out, (byte) 1, (byte) 0);
-        }
-    }
-
+ 
     /**
      * Método para deletar um arquivo do servidor (/files)
      * @param out DataOutputStream do socket do cliente para enviar a resposta
@@ -336,7 +297,6 @@ class ClientThread extends Thread {
 
         byte [] bytes = header.array();
         try {
-            System.out.println("baixado aqui 2");
             out.write(bytes, 0, size);
             out.flush();
         } catch (IOException e) {
@@ -358,11 +318,9 @@ class ClientThread extends Thread {
 
         long fileSize = 0;
 
-        byte[] fileContent = new byte[0];
 
         if (filename != null) {
             fileSize = filename.length();
-            fileContent = Files.readAllBytes(filename.toPath()); 
         } 
         // long fileSize = filename.length();
         
@@ -381,7 +339,8 @@ class ClientThread extends Thread {
         int totalSize = headerSize + 1; // +1 para o byte do arquivo
         byte[] headerBytes = header.array();
 
-        try (FileInputStream fis = new FileInputStream(filename)) {
+        if (fileSize > 0) {
+             try (FileInputStream fis = new FileInputStream(filename)) {
             out.write(headerBytes, 0, headerSize); // Envie o cabeçalho
 
             if (fileSize > 0) {
@@ -395,6 +354,11 @@ class ClientThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        } else {
+            out.write(headerBytes, 0, headerSize); // Envie o cabeçalho
+            out.flush();
+        }
+
 
     }
 
