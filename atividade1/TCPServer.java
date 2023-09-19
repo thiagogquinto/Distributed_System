@@ -1,5 +1,11 @@
 package atividade1;
 
+
+
+import java.net.*;
+import java.io.*;
+import java.util.Scanner;
+
 /**
  * Descrição: TCP Server simples que recebe comandos do cliente para manipular dados no servidor e 
  * envia respostas para o cliente com o resultado da operação.
@@ -7,13 +13,8 @@ package atividade1;
  * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
  * 
  * Data de criação: 06/09/2023
- * Data de atualização: 07/09/2023, 09/09/2023, 11/09/2023, 12/09/2023, 13/09/2023
+ * Data de atualização: 07/09/2023, 09/09/2023, 11/09/2023, 12/09/2023, 13/09/2023, 19/09
  */
-
-
-import java.net.*;
-import java.io.*;
-import java.util.Scanner;
 
 public class TCPServer {
     public static void main(String args[]) {

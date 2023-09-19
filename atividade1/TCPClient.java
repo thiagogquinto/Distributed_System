@@ -14,7 +14,7 @@ import java.util.Scanner;
  * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
  * 
  * Data de criação: 06/09/2023
- * Data de atualização: 07/09/2023, 09/09/2023, 11/09/2023, 12/09/2023,
+ * Data de atualização: 07/09/2023, 09/09/2023, 11/09/2023, 12/09/2023, 19/09
  * 13/09/2023
  */
 

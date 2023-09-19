@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
+
 /**
  * Descrição: Cliente TCP simples que se conecta com o servidor e envia comandos para manipular arquivos no servidor
  * como adicionar, deletar, listar e baixar arquivos. 
@@ -16,6 +17,10 @@ import java.nio.charset.StandardCharsets;
  * tipo de mensagem e o status da operação, seguido dos dados da resposta.
  * 
  * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
+ *
+ * Data de criação: 11/09
+ * 
+ * Data de atualização: 12/09, 13/09, 14/09, 15/09, 16/09, 17/09, 18/09 
  */
 
 

@@ -1,9 +1,5 @@
 package atividade2;
 
-/**
- * TCPServer: Servidor para conexao TCP com Threads Descricao: Recebe uma
- * conexao, cria uma thread, recebe uma mensagem e finaliza a conexao
- */
 import java.io.*;
 import java.net.*;
 import java.util.List;
@@ -13,6 +9,17 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.io.File;
 import java.nio.file.Files;
+/**
+ * TCPServer: Servidor para conexao TCP com Threads Descricao: Recebe uma
+ * conexao, cria uma thread, recebe uma mensagem do cliente e envia uma resposta
+ * para o cliente de acordo com o comando recebido e o resultado da operação.
+ * 
+ * Autores: Thiago Gariani Quinto, Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 11/09
+ * 
+ * Data de atualização: 12/09, 13/09, 14/09, 15/09, 16/09, 17/09, 18/09
+ */
 
 public class TCPServer {
 
