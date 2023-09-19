@@ -27,3 +27,11 @@ java.util.List;
 java.util.ArrayList;
 java.util.logging.*;
 java.io.File;
+
+
+Exemplos de uso:
+
+- ADDFILE: ADDFILE <nome_arquivo>
+- GETFILE: GETFILE <nome_arquivo>
+- DELETE: DELETE <nome_arquivo>
+- GETFILESLIST: GETFILESLIST

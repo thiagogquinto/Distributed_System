@@ -27,3 +27,25 @@ java.util.List;
 java.util.ArrayList;
 java.util.logging.*;
 java.io.File;
+
+
+Exemplos de uso:
+
+- Conectar com servidor:
+    CONNECT <user>, <senha>
+
+- Desconectar do servidor:
+    EXIT
+
+- Listar arquivos do servidor:
+    GETFILES
+
+- Listar diretórios 
+    GETDIRS
+
+- Mostrar diretório atual
+    PWD
+
+- Mudar de diretório
+    CHDIR <diretório>
+
