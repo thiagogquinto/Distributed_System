@@ -1,9 +1,16 @@
 package atividade1;
 
 /**
- * TCPServer: Servidor para conexao TCP com Threads Descricao: Recebe uma
- * conexao, cria uma thread, recebe uma mensagem e finaliza a conexao
+ * Descrição: TCP Server simples que recebe comandos do cliente para manipular dados no servidor e 
+ * envia respostas para o cliente com o resultado da operação.
+ * 
+ * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 06/09/2023
+ * Data de atualização: 07/09/2023, 09/09/2023, 11/09/2023, 12/09/2023, 13/09/2023
  */
+
+
 import java.net.*;
 import java.io.*;
 import java.util.Scanner;
@@ -40,7 +47,8 @@ public class TCPServer {
 /**
  * Classe ClientThread: Thread responsavel pela comunicacao
  * Descricao: Rebebe um socket, cria os objetos de leitura e escrita,
- * aguarda msgs clientes e responde com a msg + :OK
+ * aguarda msgs clientes para realizar a ação desejada e devolve uma resposta
+ * para o cliente.
  */
 class ClientThread extends Thread {
 
@@ -59,7 +67,10 @@ class ClientThread extends Thread {
         } // catch
     } // construtor
 
-    /* metodo executado ao iniciar a thread - start() */
+    /**
+     * metodo executado ao iniciar a thread - start() 
+     * Descricao: aguarda o envio de dados pelo cliente e realiza a ação desejada
+     */
     @Override
     public void run() {
         try {
@@ -67,6 +78,7 @@ class ClientThread extends Thread {
             while (true) {
                 buffer = in.readUTF(); /* aguarda o envio de dados */
 
+                /* de acordo com a requisição do cliente uma ação será realizado */
                 if (buffer.startsWith("CONNECT")) {
                     String[] bufferArray = buffer.split(" ");
                     String user = bufferArray[1].replace(",", "");
@@ -87,9 +99,11 @@ class ClientThread extends Thread {
                         System.out.println(bufferArray[0]);
                         buffer = "ERROR";
                     } else {
-                        if (bufferArray[1].split("/").length == 1 || !bufferArray[1].contains("/")) {
+                        if (bufferArray[1].split("/").length == 1) {
                             String path = bufferArray[1];
                             File file = new File(path);
+                            
+                            bufferArray[1] = bufferArray[1].replace("/", "");
 
                             if (bufferArray[1].equals("..")) {
                                 path = currentDirectory.substring(0, currentDirectory.lastIndexOf("/"));
@@ -127,12 +141,12 @@ class ClientThread extends Thread {
                         }
                     }
                 } else if (buffer.equals("GETFILES")) {
-                    File file = new File(currentDirectory);
-                    File[] files = file.listFiles();
+                    File file = new File(currentDirectory); // diretório atual 
+                    File[] files = file.listFiles(); // lista de arquivos e diretórios do diretório atual
                     Integer filesCount = 0;
                     String filesNames = "";
                     for (File f : files) {
-                        if (f.isFile()) {
+                        if (f.isFile()) { // se for arquivo
                             filesCount++;
                             filesNames += f.getName() + "\n";
                         }
@@ -146,7 +160,7 @@ class ClientThread extends Thread {
                     Integer dirsCount = 0;
                     String dirsNames = "";
                     for (File f : files) {
-                        if (f.isDirectory()) {
+                        if (f.isDirectory()) { // se for diretório
                             dirsCount++;
                             dirsNames += f.getName() + "\n";
                         }
@@ -154,7 +168,7 @@ class ClientThread extends Thread {
 
                     buffer = dirsCount + "\n" + dirsNames;
                 }
-                out.writeUTF(buffer);
+                out.writeUTF(buffer); /* envia resposta para o cliente */
             }
         } catch (EOFException eofe) {
             System.out.println("EOF: " + eofe.getMessage());
@@ -172,6 +186,14 @@ class ClientThread extends Thread {
         System.out.println("Thread comunicação cliente finalizada.");
     } // run
 
+
+    /**
+     * Método para autenticar o usuário - verifica se o usuário e senha estão no arquivo users.txt
+     * que contém os usuários e senhas "registrados" no servidor.
+     * @param user nome do usuário que está tentando se autenticar
+     * @param password senha do usuário em HASH SHA-512 que está tentando se autenticar
+     * @return true se o usuário e senha estiverem corretos, false caso contrário
+     */
     private boolean authenticate(String user, String password) {
         File file = new File("./atividade1/users.txt"); // arquivo de usuarios e senhas "registrados" no servidor
         Scanner scanner = null;
