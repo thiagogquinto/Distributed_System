@@ -83,7 +83,7 @@ public class TCPClient {
                     Integer fileSize = headerBuffer.getInt();
                   
                     if(fileSize > 0 && statusCode == 1){
-                         byte [] bytes = new byte[1];
+                        byte [] bytes = new byte[1];
                         byte[] contentByte = new byte[fileSize];
                         for (int i = 0; i < fileSize; i++) {
                             in.read(bytes);
