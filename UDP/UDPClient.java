@@ -8,6 +8,7 @@ import java.net.*;
 import java.io.*;
 import javax.swing.JOptionPane;
 import java.nio.file.Files;
+import java.security.MessageDigest;
 import java.util.Arrays;
 
 
@@ -57,10 +58,21 @@ public class UDPClient {
                 dgramSocket.send(infos); // envia o pacote
                 
                 byte [] fileBytes = Files.readAllBytes(file.toPath());
+
+                byte[] checksumBytes = null;
+
+                try {
+                    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+                    checksumBytes = sha1.digest(fileBytes);
+                } catch (Exception e) {
+                    System.out.println("Erro ao calcular o checksum");
+                }
+
                 int totalBytes = fileBytes.length;
                 int bytesSent = 0;
                 int packetNumber = 0;
 
+                /* divide o arquivo e envia os bytes */
                 while (bytesSent < totalBytes) {
                     int remainingBytes = totalBytes - bytesSent;
                     int packetSize = Math.min(remainingBytes, 1024); // Tamanho do pacote, no máximo 1024 bytes
@@ -75,6 +87,9 @@ public class UDPClient {
 
                     System.out.println("Pacote " + packetNumber + " de " + (totalBytes / 1024 + 1) + " enviado");
                 }
+
+                DatagramPacket checksum = new DatagramPacket(checksumBytes, checksumBytes.length, serverAddr, serverPort);
+                dgramSocket.send(checksum);
 
                 /* cria um buffer vazio para receber datagramas */
                  byte[] bufferRes = new byte[1024];

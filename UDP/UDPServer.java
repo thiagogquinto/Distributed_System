@@ -8,6 +8,9 @@ package UDP;
 
 import java.net.*;
 import java.io.*;
+import java.security.MessageDigest;
+import java.nio.file.Files;
+
 
 public class UDPServer{
 
@@ -57,18 +60,48 @@ public class UDPServer{
                 
                 FileOutputStream fos = new FileOutputStream(destFile, true);
 
-                buffer = new byte[1024];
-                FileWriter writer = new FileWriter(destFile, true);
-                BufferedWriter buf = new BufferedWriter(writer);
+                // buffer = new byte[1024];
+                // FileWriter writer = new FileWriter(destFile, true);
+                // BufferedWriter buf = new BufferedWriter(writer);
+                // for (int packetNumber = 1; packetNumber <= totalPackets; packetNumber++) {
+                //     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                //     dgramSocket.receive(packet);
+                    
+                //     String data = new String(packet.getData(), 0, packet.getLength());
+                //     buf.write(data);
+                // }
+                // buf.flush();    
+                // buf.close();
+
                 for (int packetNumber = 1; packetNumber <= totalPackets; packetNumber++) {
+                    System.out.println("Recebendo pacote " + packetNumber + " de " + totalPackets);
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     dgramSocket.receive(packet);
-                    
-                    String data = new String(packet.getData(), 0, packet.getLength());
-                    buf.write(data);
+                    fos.write(packet.getData(), 0, packet.getLength());
                 }
-                buf.flush();    
-                buf.close();
+
+                fos.close();
+
+                DatagramPacket checksum = new DatagramPacket(buffer, buffer.length);
+                dgramSocket.receive(checksum);
+                byte [] checksumBytesRec = checksum.getData();
+
+                byte[] checksumBytes = null;
+                byte [] fileBytes = Files.readAllBytes(destFile.toPath());
+
+                try {
+                    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+                    checksumBytes = sha1.digest(fileBytes);
+                } catch (Exception e) {
+                    System.out.println("Erro ao calcular o checksum");
+                }
+
+                if(checksumBytesRec.equals(checksumBytes)){
+                    System.out.println("Checksum OK");
+                }else{
+                    System.out.println("Checksum NOK");
+                }
+
 
                 System.out.println("Arquivo recebido com sucesso");
                 System.out.println("Arquivo salvo em: " + destFile.getAbsolutePath());

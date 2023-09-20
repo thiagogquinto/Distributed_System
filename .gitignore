@@ -3,3 +3,7 @@
 /files/
 /Downloads/
 *.lck
+/server/
+*.md
+*.png
+*.jpeg
