@@ -12,13 +12,6 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 
 
-/*
- Fazer um sistema de upload de arquivos via UDP. Um servidor UDP deverá receber as partes dos arquivos
-(1024 bytes), verificar ao final a integridade via um checksum (SHA-1) e armazenar o arquivo em uma pasta padrão.
-Sugestões: o servidor pode receber o nome e tamanho do arquivo como o primeiro pacote e o checksum como o último.
-Testar o servidor com arquivos textos e binários (ex: imagens, pdf) de tamanhos arbitrários (ex: 100 bytes, 4KiB,
-4MiB). O protocolo para a comunicação deve ser criado e especificado textualmente ou graficamente
- */
 
 public class UDPClient {
 
@@ -59,19 +52,11 @@ public class UDPClient {
                 
                 byte [] fileBytes = Files.readAllBytes(file.toPath());
 
-                byte[] checksumBytes = null;
-
-                try {
-                    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-                    checksumBytes = sha1.digest(fileBytes);
-                } catch (Exception e) {
-                    System.out.println("Erro ao calcular o checksum");
-                }
-
+                
                 int totalBytes = fileBytes.length;
                 int bytesSent = 0;
                 int packetNumber = 0;
-
+                
                 /* divide o arquivo e envia os bytes */
                 while (bytesSent < totalBytes) {
                     int remainingBytes = totalBytes - bytesSent;
@@ -81,24 +66,33 @@ public class UDPClient {
 
                     DatagramPacket packet = new DatagramPacket(packetData, packetSize, serverAddr, serverPort);
                     dgramSocket.send(packet);
-
+                    
                     bytesSent += packetSize;
                     packetNumber++;
-
+                    
                     System.out.println("Pacote " + packetNumber + " de " + (totalBytes / 1024 + 1) + " enviado");
                 }
+                
+                // byte[] checksumBytes = null;
 
-                DatagramPacket checksum = new DatagramPacket(checksumBytes, checksumBytes.length, serverAddr, serverPort);
-                dgramSocket.send(checksum);
+                try {
+                    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+                    byte[] checksumBytes = sha1.digest(fileBytes);
+                    DatagramPacket checksum = new DatagramPacket(checksumBytes, checksumBytes.length, serverAddr, serverPort);
+                    dgramSocket.send(checksum);
+                    System.out.println("Checksum enviado");
+                } catch (Exception e) {
+                    System.out.println("Erro ao calcular o checksum");
+                }
 
                 /* cria um buffer vazio para receber datagramas */
                  byte[] bufferRes = new byte[1024];
                  DatagramPacket reply = new DatagramPacket(bufferRes, bufferRes.length);
-
+                 
                  /* aguarda datagramas */
                  dgramSocket.receive(reply);
                  System.out.println("Resposta: " + new String(reply.getData(),0,reply.getLength()));
-
+                 
                  System.out.println("Deseja enviar uma nova mensagem? (s/n))");
                  
                  String respStr = in.readLine();

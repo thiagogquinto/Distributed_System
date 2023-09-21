@@ -9,6 +9,7 @@ package UDP;
 import java.net.*;
 import java.io.*;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.nio.file.Files;
 
 
@@ -60,52 +61,50 @@ public class UDPServer{
                 
                 FileOutputStream fos = new FileOutputStream(destFile, true);
 
-                // buffer = new byte[1024];
-                // FileWriter writer = new FileWriter(destFile, true);
-                // BufferedWriter buf = new BufferedWriter(writer);
-                // for (int packetNumber = 1; packetNumber <= totalPackets; packetNumber++) {
-                //     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                //     dgramSocket.receive(packet);
-                    
-                //     String data = new String(packet.getData(), 0, packet.getLength());
-                //     buf.write(data);
-                // }
-                // buf.flush();    
-                // buf.close();
-
                 for (int packetNumber = 1; packetNumber <= totalPackets; packetNumber++) {
                     System.out.println("Recebendo pacote " + packetNumber + " de " + totalPackets);
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     dgramSocket.receive(packet);
                     fos.write(packet.getData(), 0, packet.getLength());
                 }
-
+                
                 fos.close();
 
-                DatagramPacket checksum = new DatagramPacket(buffer, buffer.length);
-                dgramSocket.receive(checksum);
-                byte [] checksumBytesRec = checksum.getData();
+                
+                // byte[] checksumBytes = null;
 
-                byte[] checksumBytes = null;
-                byte [] fileBytes = Files.readAllBytes(destFile.toPath());
-
-                try {
+                int checksumCheck = 0;
+                try{
                     MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-                    checksumBytes = sha1.digest(fileBytes);
+                    byte [] fileBytes = Files.readAllBytes(destFile.toPath());
+                    int checksumSize = 20;
+                    byte [] receivedChecksumBytes = new byte[checksumSize];
+                    DatagramPacket checksumPacket = new DatagramPacket(receivedChecksumBytes, receivedChecksumBytes.length);
+                    dgramSocket.receive(checksumPacket);
+                    byte[] calculatedChecksumBytes = sha1.digest(fileBytes);
+                    
+                    if(Arrays.equals(receivedChecksumBytes, calculatedChecksumBytes)){
+                        System.out.println("Arquivo recebido com sucesso");
+                        System.out.println("Arquivo salvo em: " + destFile.getAbsolutePath());
+                        System.out.println("Checksum OK");
+                        checksumCheck = 1;
+                    }else{
+                        checksumCheck = 0;
+                        System.out.println("Checksum NOK");
+                    }
                 } catch (Exception e) {
                     System.out.println("Erro ao calcular o checksum");
                 }
-
-                if(checksumBytesRec.equals(checksumBytes)){
-                    System.out.println("Checksum OK");
-                }else{
-                    System.out.println("Checksum NOK");
+               
+                if (checksumCheck == 1) {
+                    String respStr = "Arquivo recebido com sucesso";
+                    DatagramPacket respPacket = new DatagramPacket(respStr.getBytes(), respStr.getBytes().length, dgramPacket.getAddress(), dgramPacket.getPort());
+                    dgramSocket.send(respPacket);
+                } else {
+                    String respStr = "Erro ao receber o arquivo";
+                    DatagramPacket respPacket = new DatagramPacket(respStr.getBytes(), respStr.getBytes().length, dgramPacket.getAddress(), dgramPacket.getPort());
+                    dgramSocket.send(respPacket);
                 }
-
-
-                System.out.println("Arquivo recebido com sucesso");
-                System.out.println("Arquivo salvo em: " + destFile.getAbsolutePath());
-
 
            
             } //while
