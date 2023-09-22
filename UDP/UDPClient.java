@@ -11,8 +11,6 @@ import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
-
-
 public class UDPClient {
 
     public static void main(String args[]) {
@@ -40,10 +38,11 @@ public class UDPClient {
                 File file = new File(System.getProperty("user.dir") + "/" + msg); // cria um objeto do tipo arquivo
 
                 long fileSize = file.length(); // armazena o tamanho do arquivo
+                System.out.println("Tamanho do arquivo: " + fileSize + " bytes");
 
                 int totalPackets = (int) Math.ceil((double) fileSize / 1024); // calcula o número total de pacotes que serão enviados para o servidor (tamanho do arquivo / 1024)
                 
-                String essentialsInfos = file.getName() + ":" + totalPackets; // cria uma string com o nome e o tamanho do arquivo
+                String essentialsInfos = file.getName() + ":" + fileSize; // cria uma string com o nome e o tamanho do arquivo
                 byte[] infoBytes = essentialsInfos.getBytes(); // transforma a string em bytes
                 
                 /* cria um pacote datagrama */
@@ -70,11 +69,9 @@ public class UDPClient {
                     bytesSent += packetSize;
                     packetNumber++;
                     
-                    System.out.println("Pacote " + packetNumber + " de " + (totalBytes / 1024 + 1) + " enviado");
+                    System.out.println("Pacote " + packetNumber + " de " + totalPackets + " enviado");
                 }
                 
-                // byte[] checksumBytes = null;
-
                 try {
                     MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
                     byte[] checksumBytes = sha1.digest(fileBytes);
