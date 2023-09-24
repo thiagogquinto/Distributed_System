@@ -27,7 +27,7 @@ public class UDPChat {
         DatagramSocket receiverSocket = new DatagramSocket(originPort); // Use a porta do Cliente 1
 
         System.out.println("Digite seu apelido:");
-        
+
         String nick = "";
         while (nick.isEmpty() || nick.contains(":")) {
             nick = reader.nextLine();
@@ -35,17 +35,23 @@ public class UDPChat {
                 System.err.println("Apelido inválido!");
             }
         }
-        
+
+        System.out.println("Os tipos de mensagem são:\r\n" + 
+                "1: mensagem normal\r\n" + 
+                "2: emoji\r\n" +
+                "3: URL\r\n" + 
+                "4: ECHO ");
+
         byte[] nickBytes = nick.getBytes();
         byte nickSize = (byte) nickBytes.length;
-        
+
         // Thread para enviar mensagens
         Thread senderThread = new Thread(() -> {
             String messageText = "";
             try {
                 while (true) {
                     // Leitura da mensagem do usuário
-                    messageText = JOptionPane.showInputDialog("Mensagem (tipo:mensagem) :");
+                    messageText = JOptionPane.showInputDialog("Mensagem  (Tipo:Mensagem) :");
 
                     // Verifica se a mensagem não está vazia
                     if (messageText.isEmpty()) {
@@ -54,27 +60,41 @@ public class UDPChat {
                     }
 
                     String[] infos = messageText.split(":");
-                    // Verifica se há mais de uma informação no array infos
-                    if (infos.length < 2) {
+
+                    // Verifica se a mensagem é válida
+                    if (infos[0].isEmpty() || infos.length < 2) {
                         System.out.println("Mensagem inválida! Falta de argumentos");
+                        continue;
+                    }
+
+                    // Verifica se o tipo de mensagem é válido e se é numérico?
+                    if (!infos[0].matches("[0-9]+")) {
+                        System.err.println("Tipo de mensagem inválido");
+                        continue;
+                    } else if (Integer.parseInt(infos[0]) < 1 || Integer.parseInt(infos[0]) > 4) {
+                        System.err.println("Tipo de mensagem inválido");
                         continue;
                     }
 
                     // Construção da mensagem
                     byte messageType = Byte.parseByte(infos[0]);
 
-                    if (messageType < 0 || messageType > 4) {
-                        System.err.println("Tipo de mensagem inválido! Deve estar no intervalo de 0 a 4");
-                        continue;
-                    }
-
-
+                    // Verifica se o tipo de mensagem é um emoji
+                    // Se for, converte o número para o emoji correspondente
                     if (messageType == 0x02) {
                         messageText = getEmoji(infos[1]);
 
+                    } else if (messageType == 0x03) {
+                        messageText = infos[1] + ":" + infos[2];
+                        // verifica se a URL no messageText é válida
+                        if (!messageText.contains("http://") && !messageText.contains("https://")) {
+                            System.err.println("URL inválida!");
+                            continue;
+                        }
                     } else {
                         messageText = infos[1];
                     }
+
                     byte[] messageBytes = messageText.getBytes();
                     byte messageSize = (byte) messageBytes.length;
 
@@ -167,6 +187,12 @@ public class UDPChat {
                 break;
             case "4":
                 response = ":-/";
+                break;
+            case "5":
+                response = ":-D";
+                break;
+            case "6":
+                response = ":-O";
                 break;
         }
 
