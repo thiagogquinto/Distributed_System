@@ -1,12 +1,17 @@
 package UDP;
 
 /**
- * UDPClient: Cliente UDP Descricao: Envia uma msg em um datagrama e recebe a
- * mesma msg do servidor
+ * UDPClient: Cliente UDP Descricao: Envia uma msg em um datagrama UDP para um servidor 
+ * solicitando o upload de um arquivo e aguarda a resposta do servidor informando se o
+ * arquivo foi recebido com sucesso ou não
+ *
+ *  Autores: Thiago Gariani Quinto e Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 20/09/2023
+ * Datas de modificação: 21/09/2023, 22/09/2023, 24/09/2023
  */
 import java.net.*;
 import java.io.*;
-import javax.swing.JOptionPane;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -28,7 +33,6 @@ public class UDPClient {
             int serverPort = dstPort; // porta do servidor
 
             do {
-                // String msg = JOptionPane.showInputDialog("Mensagem?");
 
                 System.out.println("Digite o nome do arquivo (ex: arquivo.txt): ");
 
@@ -71,7 +75,8 @@ public class UDPClient {
                     
                     System.out.println("Pacote " + packetNumber + " de " + totalPackets + " enviado");
                 }
-                
+
+                /* calcula o checksum do arquivo e envia para o servidor */
                 try {
                     MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
                     byte[] checksumBytes = sha1.digest(fileBytes);
@@ -90,17 +95,17 @@ public class UDPClient {
                  dgramSocket.receive(reply);
                  System.out.println("Resposta: " + new String(reply.getData(),0,reply.getLength()));
                  
-                 System.out.println("Deseja enviar uma nova mensagem? (s/n))");
+                 System.out.println("Deseja enviar uma nova mensagem? (s/n))"); // pergunta se o usuário deseja enviar uma nova requisição 
                  
                  String respStr = in.readLine();
 
                  if (respStr.equals("n")) {
-                     resp = JOptionPane.NO_OPTION;
+                    resp = 1;
                  } else {
-                     resp = JOptionPane.YES_OPTION;
+                    resp = 0;
                  }
                  
-            } while (resp != JOptionPane.NO_OPTION);
+            } while (resp == 0);
 
             /* libera o socket */
             dgramSocket.close();
