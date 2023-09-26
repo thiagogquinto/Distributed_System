@@ -19,14 +19,17 @@ public class UDPChat {
     public static void main(String[] args) throws IOException {
 
         Scanner reader = new Scanner(System.in); // ler mensagens via teclado
-        int originPort = 1111;
+        
+        System.out.println("Porta de origem: ");
+        String portString = reader.nextLine();
+        int originPort = Integer.parseInt(portString);
 
         System.out.println("IP de destino: ");
         String ipString = reader.nextLine();
         InetAddress destinationIp = InetAddress.getByName(ipString);
 
         System.out.println("Porta de destino: ");
-        String portString = reader.nextLine();
+        portString = reader.nextLine();
         int destinationPort = Integer.parseInt(portString);
 
         DatagramSocket socket = new DatagramSocket();
