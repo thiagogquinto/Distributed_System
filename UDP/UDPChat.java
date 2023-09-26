@@ -1,26 +1,32 @@
 package UDP;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.util.Scanner;
+/**
+ * UDPChat: Chat P2P
+ * Descricao: Implementa um chat P2P utilizando o protocolo UDP.
+ * 
+ * Autores: Thiago Gariani Quinto e Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 23/09/2023
+ * Datas de modificação: 23/09/2023, 24/09/2023 25/09/2023
+ */
 
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
 import javax.swing.JOptionPane;
 
 public class UDPChat {
     public static void main(String[] args) throws IOException {
 
         Scanner reader = new Scanner(System.in); // ler mensagens via teclado
-        InetAddress destinationIp = InetAddress.getByName("localhost");
+        int originPort = 1111;
 
-        System.out.println("Porta de origem: ");
-        String portString = reader.nextLine();
-        int originPort = Integer.parseInt(portString);
+        System.out.println("IP de destino: ");
+        String ipString = reader.nextLine();
+        InetAddress destinationIp = InetAddress.getByName(ipString);
 
         System.out.println("Porta de destino: ");
-        portString = reader.nextLine();
+        String portString = reader.nextLine();
         int destinationPort = Integer.parseInt(portString);
 
         DatagramSocket socket = new DatagramSocket();
@@ -28,10 +34,10 @@ public class UDPChat {
 
         System.out.println("Digite seu apelido:");
 
-        String nick = "";
-        while (nick.isEmpty() || nick.contains(":")) {
-            nick = reader.nextLine();
-            if (nick.isEmpty() || nick.contains(":")) {
+        String senderNickname= "";
+        while (senderNickname.isEmpty() || senderNickname.contains(":")) {
+            senderNickname= reader.nextLine();
+            if (senderNickname.isEmpty() || senderNickname.contains(":")) {
                 System.err.println("Apelido inválido!");
             }
         }
@@ -42,7 +48,7 @@ public class UDPChat {
                 "3: URL\r\n" + 
                 "4: ECHO ");
 
-        byte[] nickBytes = nick.getBytes();
+        byte[] nickBytes = senderNickname.getBytes();
         byte nickSize = (byte) nickBytes.length;
 
         // Thread para enviar mensagens
@@ -79,8 +85,6 @@ public class UDPChat {
                     // Construção da mensagem
                     byte messageType = Byte.parseByte(infos[0]);
 
-                    // Verifica se o tipo de mensagem é um emoji
-                    // Se for, converte o número para o emoji correspondente
                     if (messageType == 0x02) {
                         messageText = getEmoji(infos[1]);
 
@@ -173,6 +177,7 @@ public class UDPChat {
         receiverThread.start();
     }
 
+    //* *//
     public static String getEmoji(String messageContent) {
         String response = "";
         switch (messageContent) {
