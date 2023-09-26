@@ -63,15 +63,13 @@ public class UDPChat {
                 do {
                     // Leitura da mensagem do usuário
                     messageText = JOptionPane.showInputDialog("Mensagem  (Tipo:Mensagem) :");
-
-                    // // Interrupção da thread caso o usuário clique em cancelar e encerramento da comunicação
-                    // if (messageText == null) {
-                    //     System.out.println("Encerrando comunicação...");
-                    //     socket.close();
-                    //     receiverSocket.close();
-                    //     System.exit(0);
-                    // }
                     
+                    // Verifica se a mensagem não é null, se for interrompe o while
+                    if (messageText == null) {
+                        System.out.println("Mensagem inválida!");
+                        break;
+                    }
+
                     // Verifica se a mensagem não está vazia
                     if (messageText.isEmpty()) {
                         System.out.println("Mensagem inválida!");
@@ -102,12 +100,13 @@ public class UDPChat {
                         messageText = getEmoji(infos[1]);
 
                     } else if (messageType == 0x03) {
-                        messageText = infos[1] + ":" + infos[2];
-                        // verifica se a URL no messageText é válida
                         if (!messageText.contains("http://") && !messageText.contains("https://")) {
-                            System.err.println("URL inválida!");
+                            System.out.println("URL inválida!");
                             continue;
                         }
+
+                        messageText = infos[1] + ":" + infos[2];
+                        // verifica se a URL no messageText é válida
                     } else {
                         messageText = infos[1];
                     }
@@ -145,6 +144,7 @@ public class UDPChat {
                 
             } catch (SocketException e) {
                 System.out.println("Socket: " + e.getMessage());
+                System.out.println("Comunicação encerrada.");
             } catch (IOException e) {
                 System.out.println("IO: " + e.getMessage());
             }
