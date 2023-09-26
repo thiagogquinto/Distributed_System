@@ -51,14 +51,24 @@ public class UDPChat {
         byte[] nickBytes = senderNickname.getBytes();
         byte nickSize = (byte) nickBytes.length;
 
+        
         // Thread para enviar mensagens
         Thread senderThread = new Thread(() -> {
+            int resp = 0;
             String messageText = "";
             try {
-                while (true) {
+                do {
                     // Leitura da mensagem do usuário
                     messageText = JOptionPane.showInputDialog("Mensagem  (Tipo:Mensagem) :");
 
+                    // // Interrupção da thread caso o usuário clique em cancelar e encerramento da comunicação
+                    // if (messageText == null) {
+                    //     System.out.println("Encerrando comunicação...");
+                    //     socket.close();
+                    //     receiverSocket.close();
+                    //     System.exit(0);
+                    // }
+                    
                     // Verifica se a mensagem não está vazia
                     if (messageText.isEmpty()) {
                         System.out.println("Mensagem inválida!");
@@ -120,9 +130,20 @@ public class UDPChat {
 
                     // Imprimir a mensagem enviada
                     System.out.println("Você: " + messageText);
-                }
+
+                    resp = JOptionPane.showConfirmDialog(null, "Nova mensagem?", 
+                        "Continuar", JOptionPane.YES_NO_OPTION);
+
+                } while (resp != JOptionPane.NO_OPTION);
+
+                // Libera os sockets
+                socket.close();
+                receiverSocket.close();
+                
+            } catch (SocketException e) {
+                System.out.println("Socket: " + e.getMessage());
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("IO: " + e.getMessage());
             }
         });
 
@@ -166,8 +187,10 @@ public class UDPChat {
                     }
 
                 }
+            } catch (SocketException e) {
+                System.out.println("Socket: " + e.getMessage());
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("IO: " + e.getMessage());
             }
 
         });
