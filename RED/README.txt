@@ -1,14 +1,20 @@
 Como compilar:
+
+    Primeiramente, certifique-se que está no diretório javacode e execute o seguinte comando:
     
-    javac -classpath .:protobuf-java-3.24.4.jar Client
+    javac -classpath .:protobuf-java-3.24.4.jar Client.java
 
 Como executar:
+
+Antes de executar o servidor é necessário instalar alguns módulos, para isso execute o seguinte comando:
+    pip install google protobuf bson pymongo
+
+Para executar o servidor é necessário estar no diretório pythoncode, execute o seguinte comando:
+    python3 server.python3
 
 Para executar o cliente é necessário estar no diretório javacode, execute o seguinte comando:
     java -classpath .:protobuf-java-3.24.4.jar Client
 
-Para executar o servidor é necessário estar no diretório pythoncode, execute o seguinte comando:
-    python3 server.python3
 
 Bibliotecas usadas:
     Bibliotecas servidor:
