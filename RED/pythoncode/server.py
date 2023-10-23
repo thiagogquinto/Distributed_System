@@ -156,18 +156,24 @@ def update_movie(movie_proto):
 
 # Função que recebe a mensagem protobuf e deleta um filme no MongoDB   
 def delete_movie(title, id):
+    print("AQUI-DELETE")
     try:
-        object_id = ObjectId(id)
-        result = movies_collection.delete_one({"_id": object_id})
-        print("Aqui")
-        response_proto = movie_pb2.Movie()
-        
-        if result.deleted_count == 0:
-            response_proto.response = "Filme não encontrado\n"
+        try:
+            object_id = ObjectId(id)
+        except:
+            response_proto = movie_pb2.Movie()
+            response_proto.response = "ID inválido\n"
+            return response_proto
         else:
-            response_proto.response = f"Filme removido com sucesso. Contagem: {result.deleted_count}\n"
+            result = movies_collection.delete_one({"_id": object_id})
+            response_proto = movie_pb2.Movie()
+            
+            if result.deleted_count == 0:
+                response_proto.response = "Filme não encontrado\n"
+            else:
+                response_proto.response = f"Filme removido com sucesso. Contagem: {result.deleted_count}\n"
 
-        return response_proto
+            return response_proto
     
     except Exception as e:
         response_proto.response = f"Erro ao remover filme: {e}\n"
