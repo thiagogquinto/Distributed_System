@@ -10,7 +10,7 @@ Antes de executar o servidor é necessário instalar alguns módulos, para isso 
     pip install google protobuf bson pymongo
 
 Para executar o servidor é necessário estar no diretório pythoncode, execute o seguinte comando:
-    python3 server.python3
+    python3 server.py
 
 Para executar o cliente é necessário estar no diretório javacode, execute o seguinte comando:
     java -classpath .:protobuf-java-3.24.4.jar Client

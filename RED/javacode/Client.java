@@ -1,3 +1,15 @@
+/**
+ * Descrição: Cliente que manda a operação requerida além das informações a serem preenchidas
+ * de acordo com a solicitação
+ * 
+ * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 10/10/2023
+ * Data de atualização: 11/10/2023, 12/10/2023, 13/10/2023, 14/10/2023, 15/10/2023/, 16/10/2023/ 17/10/023, 18/10/2023, 19/10/2023,
+ * 23/10/2023, 24/10/2023
+ * 
+ */
+
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
@@ -213,56 +225,3 @@ public class Client {
         return movieDataBuilder;
     }
 }
-
-
-// private static void printResponse(Socket socket) {
-        
-    //     try {
-    //         // Receber resposta do servidor
-    //         DataInputStream dis = new DataInputStream(socket.getInputStream());
-    //         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(dis));
-            
-    //         String valueStr = inFromServer.readLine();
-            
-    //         // Ler o tamanho do buffer
-    //         int sizeBuffer = Integer.valueOf(valueStr);
-    //         byte[] buffer = new byte[sizeBuffer];
-            
-    //         System.out.println("A resposta do servidor tem ");
-
-    //         // Ler os dados do buffer
-    //         dis.readFully(buffer);
-            
-    //         // Parse da mensagem protobuf
-    //         MovieOuterClass.Movie response = MovieOuterClass.Movie.parseFrom(buffer);
-            
-    //         if (response != null) {
-    //             System.out.println("\nResposta do servidor: " + response.toString());
-    //         } else {
-    //             System.out.println("\nNão recebeu resposta válida do servidor.\n");
-    //         }
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-        
-    // }
-
-    // private static void printResponse(Socket socket) {
-    //     try {
-    //         DataInputStream dis = new DataInputStream(socket.getInputStream());
-    //         int sizeBuffer = dis.readInt(); // Lê o tamanho do buffer como um inteiro
-    
-    //         byte[] buffer = new byte[sizeBuffer];
-    //         dis.readFully(buffer); // Lê os dados do buffer
-    
-    //         MovieOuterClass.Movie response = MovieOuterClass.Movie.parseFrom(buffer);
-    
-    //         if (response != null) {
-    //             System.out.println("\nResposta do servidor: " + response.toString());
-    //         } else {
-    //             System.out.println("\nNão recebeu resposta válida do servidor.\n");
-    //         }
-    //     } catch (IOException e) {
-    //         e.printStackTrace();
-    //     }
-    // }

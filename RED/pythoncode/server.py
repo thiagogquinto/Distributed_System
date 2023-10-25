@@ -1,3 +1,15 @@
+'''
+ * Descrição: servidor em python que recebe a solicitação do cliente e manda a resposta de volta
+ * no formato de protobuffer
+ * 
+ * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 10/10/2023
+ * Data de atualização: 11/10/2023, 12/10/2023, 13/10/2023, 14/10/2023, 15/10/2023/, 16/10/2023/ 17/10/023, 18/10/2023, 19/10/2023,
+ * 23/10/2023, 24/10/2023
+ * 
+'''
+
 import socket
 import movie_pb2 
 from bson import ObjectId
@@ -47,27 +59,31 @@ def get_movies(args = None, movie_proto = None):
         # Cria uma mensagem protobuf para armazenar os filmes
         response_proto = movie_pb2.Movie()
 
-        # Preenche a mensagem protobuf com os dados dos filmes
-        for movie in movies_cursor:
-            movie_proto = response_proto.movies.add()
-            movie_proto.id = str(movie.get("_id", ""))
-            movie_proto.plot = movie.get("plot", "")
-            movie_proto.genres.extend(movie.get("genres", []))
-            movie_proto.runtime = movie.get("runtime", 0)
-            movie_proto.cast.extend(movie.get("cast", []))
-            movie_proto.num_mflix_comments = movie.get("num_mflix_comments", 0)
-            movie_proto.title = movie.get("title", "")
-            movie_proto.fullplot = movie.get("fullplot", "")
-            movie_proto.countries.extend(movie.get("countries", []))
-            movie_proto.released = str(movie.get("released", ""))
-            movie_proto.directors.extend(movie.get("directors", []))
-            movie_proto.rated = movie.get("rated", "")
-            movie_proto.lastupdated = movie.get("lastupdated", "")
-            movie_proto.year = str(movie.get("year", ""))
-            movie_proto.type = movie.get("type", "")
+        if not movies_cursor:
+            response_proto.response = "Sem filmes correspondentes\n"
+            return response_proto
+        else:
+            # Preenche a mensagem protobuf com os dados dos filmes
+            for movie in movies_cursor:
+                movie_proto = response_proto.movies.add()
+                movie_proto.id = str(movie.get("_id", ""))
+                movie_proto.plot = movie.get("plot", "")
+                movie_proto.genres.extend(movie.get("genres", []))
+                movie_proto.runtime = movie.get("runtime", 0)
+                movie_proto.cast.extend(movie.get("cast", []))
+                movie_proto.num_mflix_comments = movie.get("num_mflix_comments", 0)
+                movie_proto.title = movie.get("title", "")
+                movie_proto.fullplot = movie.get("fullplot", "")
+                movie_proto.countries.extend(movie.get("countries", []))
+                movie_proto.released = str(movie.get("released", ""))
+                movie_proto.directors.extend(movie.get("directors", []))
+                movie_proto.rated = movie.get("rated", "")
+                movie_proto.lastupdated = movie.get("lastupdated", "")
+                movie_proto.year = str(movie.get("year", ""))
+                movie_proto.type = movie.get("type", "")
 
-        # Retorna a mensagem protobuf diretamente, sem chamar SerializeToBytes
-        return response_proto
+            # Retorna a mensagem protobuf diretamente, sem chamar SerializeToBytes
+            return response_proto
 
     except Exception as e:
         # Retorna a mensagem de erro como bytes
@@ -159,9 +175,8 @@ def delete_movie(title, id):
     try:
         object_id = ObjectId(id)
         result = movies_collection.delete_one({"_id": object_id})
-        print("Aqui")
         response_proto = movie_pb2.Movie()
-        
+    
         if result.deleted_count == 0:
             response_proto.response = "Filme não encontrado\n"
         else:
@@ -229,7 +244,6 @@ while True:
             elif request.operation == "update_movie":
                 print("Recebido pedido para atualizar filme")
                 response = update_movie(request.movies[0])
-                print("AQUI")
                 send_response(response)
 
             elif request.operation == "exit":
