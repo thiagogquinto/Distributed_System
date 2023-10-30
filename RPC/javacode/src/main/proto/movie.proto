@@ -1,12 +1,12 @@
 syntax = "proto3";
 
 service MovieService {
-  rpc GetMovies (GetMoviesRequest) returns (Movie) {}
-  rpc GetMovieByActor (GetMoviesRequest) returns (Movie) {}
-  rpc GetMovieByGenre (GetMoviesRequest) returns (Movie) {}
-  rpc DeleteMovie (DeleteMovieRequest) returns (Movie) {}
-  rpc UpdateMovie (Movie) returns (Movie) {}
-  rpc AddMovie (Movie) returns (Movie) {}
+  rpc GetMovies (GetMoviesRequest) returns (MovieList) {}
+  rpc GetMovieByActor (GetMoviesRequest) returns (MovieList) {}
+  rpc GetMovieByGenre (GetMoviesRequest) returns (MovieList) {}
+  rpc DeleteMovie (DeleteMovieRequest) returns (Response) {}
+  rpc UpdateMovie (MoviesData) returns (Response) {}
+  rpc AddMovie (MoviesData) returns (Response) {}
 }
 
 message GetMoviesRequest {
@@ -19,21 +19,11 @@ message DeleteMovieRequest {
   string id = 2;
 }
 
-message DeleteMovieResponse {
+message Response {
   string response = 1;
 }
 
-message UpdateMovieResponse {
-  string response = 1;
-  Movie.MovieData movie = 2;
-}
-
-message Movie {
-  string operation = 1;
-  string response = 2;
-  repeated MovieData movies = 3;
-
-  message MovieData {
+message MoviesData {
     string id = 1;
     string plot = 2;
     repeated string genres = 3;
@@ -49,5 +39,8 @@ message Movie {
     string lastupdated = 13;
     string year = 14;
     string type = 15;
-  }
+}
+
+message MovieList {
+  repeated MoviesData movies = 1;
 }

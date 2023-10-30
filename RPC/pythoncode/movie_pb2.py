@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bmovie.proto\"8\n\x10GetMoviesRequest\x12\x11\n\toperation\x18\x01 \x01(\t\x12\x11\n\tparameter\x18\x02 \x01(\t\"3\n\x12\x44\x65leteMovieRequest\x12\x11\n\toperation\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\"\'\n\x13\x44\x65leteMovieResponse\x12\x10\n\x08response\x18\x01 \x01(\t\"G\n\x13UpdateMovieResponse\x12\x0f\n\x07reponse\x18\x01 \x01(\t\x12\x1f\n\x05movie\x18\x02 \x01(\x0b\x32\x10.Movie.MovieData\"\xda\x02\n\x05Movie\x12\x11\n\toperation\x18\x01 \x01(\t\x12\x10\n\x08response\x18\x02 \x01(\t\x12 \n\x06movies\x18\x03 \x03(\x0b\x32\x10.Movie.MovieData\x1a\x89\x02\n\tMovieData\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04plot\x18\x02 \x01(\t\x12\x0e\n\x06genres\x18\x03 \x03(\t\x12\x0f\n\x07runtime\x18\x04 \x01(\x05\x12\x0c\n\x04\x63\x61st\x18\x05 \x03(\t\x12\x1a\n\x12num_mflix_comments\x18\x06 \x01(\x05\x12\r\n\x05title\x18\x07 \x01(\t\x12\x10\n\x08\x66ullplot\x18\x08 \x01(\t\x12\x11\n\tcountries\x18\t \x03(\t\x12\x10\n\x08released\x18\n \x01(\t\x12\x11\n\tdirectors\x18\x0b \x03(\t\x12\r\n\x05rated\x18\x0c \x01(\t\x12\x13\n\x0blastupdated\x18\r \x01(\t\x12\x0c\n\x04year\x18\x0e \x01(\t\x12\x0c\n\x04type\x18\x0f \x01(\t2\x85\x02\n\x0cMovieService\x12(\n\tGetMovies\x12\x11.GetMoviesRequest\x1a\x06.Movie\"\x00\x12.\n\x0fGetMovieByActor\x12\x11.GetMoviesRequest\x1a\x06.Movie\"\x00\x12.\n\x0fGetMovieByGenre\x12\x11.GetMoviesRequest\x1a\x06.Movie\"\x00\x12,\n\x0b\x44\x65leteMovie\x12\x13.DeleteMovieRequest\x1a\x06.Movie\"\x00\x12\x1f\n\x0bUpdateMovie\x12\x06.Movie\x1a\x06.Movie\"\x00\x12\x1c\n\x08\x41\x64\x64Movie\x12\x06.Movie\x1a\x06.Movie\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bmovie.proto\"8\n\x10GetMoviesRequest\x12\x11\n\toperation\x18\x01 \x01(\t\x12\x11\n\tparameter\x18\x02 \x01(\t\" \n\x12\x44\x65leteMovieRequest\x12\n\n\x02id\x18\x01 \x01(\t\"\x1c\n\x08Response\x12\x10\n\x08response\x18\x01 \x01(\t\"\x8a\x02\n\nMoviesData\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04plot\x18\x02 \x01(\t\x12\x0e\n\x06genres\x18\x03 \x03(\t\x12\x0f\n\x07runtime\x18\x04 \x01(\x05\x12\x0c\n\x04\x63\x61st\x18\x05 \x03(\t\x12\x1a\n\x12num_mflix_comments\x18\x06 \x01(\x05\x12\r\n\x05title\x18\x07 \x01(\t\x12\x10\n\x08\x66ullplot\x18\x08 \x01(\t\x12\x11\n\tcountries\x18\t \x03(\t\x12\x10\n\x08released\x18\n \x01(\t\x12\x11\n\tdirectors\x18\x0b \x03(\t\x12\r\n\x05rated\x18\x0c \x01(\t\x12\x13\n\x0blastupdated\x18\r \x01(\t\x12\x0c\n\x04year\x18\x0e \x01(\t\x12\x0c\n\x04type\x18\x0f \x01(\t\"(\n\tMovieList\x12\x1b\n\x06movies\x18\x01 \x03(\x0b\x32\x0b.MoviesData2\xa4\x02\n\x0cMovieService\x12,\n\tGetMovies\x12\x11.GetMoviesRequest\x1a\n.MovieList\"\x00\x12\x32\n\x0fGetMovieByActor\x12\x11.GetMoviesRequest\x1a\n.MovieList\"\x00\x12\x32\n\x0fGetMovieByGenre\x12\x11.GetMoviesRequest\x1a\n.MovieList\"\x00\x12/\n\x0b\x44\x65leteMovie\x12\x13.DeleteMovieRequest\x1a\t.Response\"\x00\x12\'\n\x0bUpdateMovie\x12\x0b.MoviesData\x1a\t.Response\"\x00\x12$\n\x08\x41\x64\x64Movie\x12\x0b.MoviesData\x1a\t.Response\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,15 +23,13 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_GETMOVIESREQUEST']._serialized_start=15
   _globals['_GETMOVIESREQUEST']._serialized_end=71
   _globals['_DELETEMOVIEREQUEST']._serialized_start=73
-  _globals['_DELETEMOVIEREQUEST']._serialized_end=124
-  _globals['_DELETEMOVIERESPONSE']._serialized_start=126
-  _globals['_DELETEMOVIERESPONSE']._serialized_end=165
-  _globals['_UPDATEMOVIERESPONSE']._serialized_start=167
-  _globals['_UPDATEMOVIERESPONSE']._serialized_end=238
-  _globals['_MOVIE']._serialized_start=241
-  _globals['_MOVIE']._serialized_end=587
-  _globals['_MOVIE_MOVIEDATA']._serialized_start=322
-  _globals['_MOVIE_MOVIEDATA']._serialized_end=587
-  _globals['_MOVIESERVICE']._serialized_start=590
-  _globals['_MOVIESERVICE']._serialized_end=851
+  _globals['_DELETEMOVIEREQUEST']._serialized_end=105
+  _globals['_RESPONSE']._serialized_start=107
+  _globals['_RESPONSE']._serialized_end=135
+  _globals['_MOVIESDATA']._serialized_start=138
+  _globals['_MOVIESDATA']._serialized_end=404
+  _globals['_MOVIELIST']._serialized_start=406
+  _globals['_MOVIELIST']._serialized_end=446
+  _globals['_MOVIESERVICE']._serialized_start=449
+  _globals['_MOVIESERVICE']._serialized_end=741
 # @@protoc_insertion_point(module_scope)

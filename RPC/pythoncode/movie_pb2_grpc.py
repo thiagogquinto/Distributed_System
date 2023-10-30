@@ -17,32 +17,32 @@ class MovieServiceStub(object):
         self.GetMovies = channel.unary_unary(
                 '/MovieService/GetMovies',
                 request_serializer=movie__pb2.GetMoviesRequest.SerializeToString,
-                response_deserializer=movie__pb2.Movie.FromString,
+                response_deserializer=movie__pb2.MovieList.FromString,
                 )
         self.GetMovieByActor = channel.unary_unary(
                 '/MovieService/GetMovieByActor',
                 request_serializer=movie__pb2.GetMoviesRequest.SerializeToString,
-                response_deserializer=movie__pb2.Movie.FromString,
+                response_deserializer=movie__pb2.MovieList.FromString,
                 )
         self.GetMovieByGenre = channel.unary_unary(
                 '/MovieService/GetMovieByGenre',
                 request_serializer=movie__pb2.GetMoviesRequest.SerializeToString,
-                response_deserializer=movie__pb2.Movie.FromString,
+                response_deserializer=movie__pb2.MovieList.FromString,
                 )
         self.DeleteMovie = channel.unary_unary(
                 '/MovieService/DeleteMovie',
                 request_serializer=movie__pb2.DeleteMovieRequest.SerializeToString,
-                response_deserializer=movie__pb2.Movie.FromString,
+                response_deserializer=movie__pb2.Response.FromString,
                 )
         self.UpdateMovie = channel.unary_unary(
                 '/MovieService/UpdateMovie',
-                request_serializer=movie__pb2.Movie.SerializeToString,
-                response_deserializer=movie__pb2.Movie.FromString,
+                request_serializer=movie__pb2.MoviesData.SerializeToString,
+                response_deserializer=movie__pb2.Response.FromString,
                 )
         self.AddMovie = channel.unary_unary(
                 '/MovieService/AddMovie',
-                request_serializer=movie__pb2.Movie.SerializeToString,
-                response_deserializer=movie__pb2.Movie.FromString,
+                request_serializer=movie__pb2.MoviesData.SerializeToString,
+                response_deserializer=movie__pb2.Response.FromString,
                 )
 
 
@@ -91,32 +91,32 @@ def add_MovieServiceServicer_to_server(servicer, server):
             'GetMovies': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMovies,
                     request_deserializer=movie__pb2.GetMoviesRequest.FromString,
-                    response_serializer=movie__pb2.Movie.SerializeToString,
+                    response_serializer=movie__pb2.MovieList.SerializeToString,
             ),
             'GetMovieByActor': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMovieByActor,
                     request_deserializer=movie__pb2.GetMoviesRequest.FromString,
-                    response_serializer=movie__pb2.Movie.SerializeToString,
+                    response_serializer=movie__pb2.MovieList.SerializeToString,
             ),
             'GetMovieByGenre': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMovieByGenre,
                     request_deserializer=movie__pb2.GetMoviesRequest.FromString,
-                    response_serializer=movie__pb2.Movie.SerializeToString,
+                    response_serializer=movie__pb2.MovieList.SerializeToString,
             ),
             'DeleteMovie': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteMovie,
                     request_deserializer=movie__pb2.DeleteMovieRequest.FromString,
-                    response_serializer=movie__pb2.Movie.SerializeToString,
+                    response_serializer=movie__pb2.Response.SerializeToString,
             ),
             'UpdateMovie': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateMovie,
-                    request_deserializer=movie__pb2.Movie.FromString,
-                    response_serializer=movie__pb2.Movie.SerializeToString,
+                    request_deserializer=movie__pb2.MoviesData.FromString,
+                    response_serializer=movie__pb2.Response.SerializeToString,
             ),
             'AddMovie': grpc.unary_unary_rpc_method_handler(
                     servicer.AddMovie,
-                    request_deserializer=movie__pb2.Movie.FromString,
-                    response_serializer=movie__pb2.Movie.SerializeToString,
+                    request_deserializer=movie__pb2.MoviesData.FromString,
+                    response_serializer=movie__pb2.Response.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -141,7 +141,7 @@ class MovieService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/MovieService/GetMovies',
             movie__pb2.GetMoviesRequest.SerializeToString,
-            movie__pb2.Movie.FromString,
+            movie__pb2.MovieList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -158,7 +158,7 @@ class MovieService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/MovieService/GetMovieByActor',
             movie__pb2.GetMoviesRequest.SerializeToString,
-            movie__pb2.Movie.FromString,
+            movie__pb2.MovieList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -175,7 +175,7 @@ class MovieService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/MovieService/GetMovieByGenre',
             movie__pb2.GetMoviesRequest.SerializeToString,
-            movie__pb2.Movie.FromString,
+            movie__pb2.MovieList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -192,7 +192,7 @@ class MovieService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/MovieService/DeleteMovie',
             movie__pb2.DeleteMovieRequest.SerializeToString,
-            movie__pb2.Movie.FromString,
+            movie__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -208,8 +208,8 @@ class MovieService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/MovieService/UpdateMovie',
-            movie__pb2.Movie.SerializeToString,
-            movie__pb2.Movie.FromString,
+            movie__pb2.MoviesData.SerializeToString,
+            movie__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -225,7 +225,7 @@ class MovieService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/MovieService/AddMovie',
-            movie__pb2.Movie.SerializeToString,
-            movie__pb2.Movie.FromString,
+            movie__pb2.MoviesData.SerializeToString,
+            movie__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

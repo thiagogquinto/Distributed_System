@@ -2,8 +2,8 @@ import socket
 import movie_pb2 
 import movie_pb2_grpc
 import grpc
-from concurrent import futures
 from bson import ObjectId
+from concurrent import futures
 from datetime import datetime
 from pymongo import MongoClient
 
@@ -49,10 +49,10 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
     def GetMovies(self, request, context):
 
         movies = movies_collection.find({}, {"imdb":0, "tomatoes":0, "awards":0})
-        response = movie_pb2.Movies()
+        response = movie_pb2.MovieList()
 
         for movie in movies:
-            response.movies.append(movie_pb2.Movie(
+            response.movies.append(movie_pb2.MoviesData(
                 id=str(movie['_id']),
                 plot=movie['plot'],
                 genres=movie['genres'],
@@ -74,10 +74,10 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
     
     def GetMovieByActor(self, request, context):
         movies = movies_collection.find({"cast": request.actor}, {"imdb":0, "tomatoes":0, "awards":0})
-        response = movie_pb2.Movies()
+        response = movie_pb2.MovieList()
 
         for movie in movies:
-            response.movies.append(movie_pb2.Movie(
+            response.movies.append(movie_pb2.MoviesData(
                 id=str(movie['_id']),
                 plot=movie['plot'],
                 genres=movie['genres'],
@@ -99,10 +99,10 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
 
     def GetMovieByGenre(self, request, context):
         movies = movies_collection.find({"genres": request.genre}, {"imdb":0, "tomatoes":0, "awards":0})
-        response = movie_pb2.Movies()
+        response = movie_pb2.MovieList()
 
         for movie in movies:
-            response.movies.append(movie_pb2.Movie(
+            response.movies.append(movie_pb2.MoviesData(
                 id=str(movie['_id']),
                 plot=movie['plot'],
                 genres=movie['genres'],
@@ -126,9 +126,9 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
         result = movies_collection.delete_one({"_id": ObjectId(request.id)})
 
         if result.deleted_count == 1:
-            return movie_pb2.DeleteMovieResponse(message="Filme deletado com sucesso!")
+            return movie_pb2.Response(message="Filme deletado com sucesso!")
         else:
-            return movie_pb2.DeleteMovieResponse(message="Filme não encontrado!") 
+            return movie_pb2.Response(message="Filme não encontrado!") 
 
     def UpdateMovie(self, request, context):
 
@@ -152,9 +152,9 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
         result = movies_collection.update_one({"_id": ObjectId(request.id)}, {"$set": updated_movie})
 
         if result.modified_count == 1:
-            return movie_pb2.UpdateMovieResponse(response="Filme atualizado com sucesso!", movie=movie_pb2.Movie.MovieData(**updated_movie))
+            return movie_pb2.Response(message="Filme atualizado com sucesso!")
         else:
-            return movie_pb2.UpdateMovieResponse(response="Filme não encontrado!", movie=movie_pb2.Movie().Empty())
+            return movie_pb2.Response(message="Filme não encontrado!")
 
     def AddMovie(self, request, context):
 
@@ -178,9 +178,9 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
         result = movies_collection.insert_one(movie_data)
 
         if result.inserted_id:
-            return movie_pb2.AddMovieResponse(response="Filme adicionado com sucesso! - ID: " + str(result.inserted_id), movie=movie_pb2.Movie.MovieData(**movie_data))
+            return movie_pb2.Response(message="Filme adicionado com sucesso! - ID: " + str(result.inserted_id))
         else:
-            return movie_pb2.AddMovieResponse(response="Erro ao adicionar filme!", movie=movie_pb2.Movie())
+            return movie_pb2.Response(message="Erro ao adicionar filme!")
         
 def main():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

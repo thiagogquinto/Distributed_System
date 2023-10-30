@@ -1,15 +1,3 @@
-/**
- * Descrição: Cliente que manda a operação requerida além das informações a serem preenchidas
- * de acordo com a solicitação
- * 
- * Autor: Thiago Gariani Quinto, Marcos Vinicius de Quadros
- * 
- * Data de criação: 10/10/2023
- * Data de atualização: 11/10/2023, 12/10/2023, 13/10/2023, 14/10/2023, 15/10/2023/, 16/10/2023/ 17/10/023, 18/10/2023, 19/10/2023,
- * 23/10/2023, 24/10/2023
- * 
- */
-
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
@@ -38,36 +26,104 @@ public class Client {
                 request.setOperation("get_movies");
                 request.setParameter("todos");
                 MovieOuterClass.GetMoviesResponse response = stub.getMovies(request);
+                MovieOuterClass.MovieList movieList = response.getMoviesList();
 
-                
-
+               if (movieList.getMoviesCount() == 0) {
+                    System.out.println("Nenhum filme encontrado");
+                } else {
+                    for (MovieOuterClass.Movie.MovieData movieData : movieList.getMoviesList()) {
+                        System.out.println("ID: " + movieData.getId());
+                        System.out.println("Plot: " + movieData.getPlot());
+                        System.out.println("Gêneros: " + movieData.getGenresList());
+                        System.out.println("Duração: " + movieData.getRuntime());
+                        System.out.println("Atores: " + movieData.getCastList());
+                        System.out.println("Quantidade de comentários: " + movieData.getNumMflixComments());
+                        System.out.println("Título: " + movieData.getTitle());
+                        System.out.println("Enredo: " + movieData.getFullplot());
+                        System.out.println("Países: " + movieData.getCountriesList());
+                        System.out.println("Data de lançamento: " + movieData.getReleased());
+                        System.out.println("Diretores: " + movieData.getDirectorsList());
+                        System.out.println("Rated: " + movieData.getRated());
+                        System.out.println("Ano: " + movieData.getYear());
+                        System.out.println("Tipo: " + movieData.getType());
+                        System.out.println("--------------------------------------------------");
+                    }
+                }
             } else if (command.equals("2")){
                 MovieOuterClass.GetMoviesRequest.Builder request = MovieOuterClass.GetMoviesRequest.newBuilder();
                 String actor = getUserInput("Digite o ator: ", reader);
                 request.setOperation("get_movies_by_actor");
                 request.setParameter(actor);
                 GetMoviesResponse response = stub.getMovies(request);
+
+                MovieOuterClass.MovieList movieList = response.getMoviesList();
+
+                if (movieList.getMoviesCount() == 0) {
+                    System.out.println("Nenhum filme de " + actor + " encontrado");
+                } else {
+                    for (MovieOuterClass.Movie.MovieData movieData : movieList.getMoviesList()) {
+                        System.out.println("ID: " + movieData.getId());
+                        System.out.println("Plot: " + movieData.getPlot());
+                        System.out.println("Gêneros: " + movieData.getGenresList());
+                        System.out.println("Duração: " + movieData.getRuntime());
+                        System.out.println("Atores: " + movieData.getCastList());
+                        System.out.println("Quantidade de comentários: " + movieData.getNumMflixComments());
+                        System.out.println("Título: " + movieData.getTitle());
+                        System.out.println("Enredo: " + movieData.getFullplot());
+                        System.out.println("Países: " + movieData.getCountriesList());
+                        System.out.println("Data de lançamento: " + movieData.getReleased());
+                        System.out.println("Diretores: " + movieData.getDirectorsList());
+                        System.out.println("Rated: " + movieData.getRated());
+                        System.out.println("Ano: " + movieData.getYear());
+                        System.out.println("Tipo: " + movieData.getType());
+                        System.out.println("--------------------------------------------------");
+                    }
+                }
+
             } else if (command.equals("3")){
                 MovieOuterClass.GetMoviesRequest.Builder request = MovieOuterClass.GetMoviesRequest.newBuilder();
                 String genre = getUserInput("Digite o gênero: ", reader);
                 request.setOperation("get_movies_by_genre");
                 request.setParameter(genre);
                 GetMoviesResponse response = stub.getMovies(request);
+                
+                if (movieList.getMoviesCount() == 0) {
+                    System.out.println("Nenhum filme de gênero " + genre + " encontrado	");
+                } else {
+                    for (MovieOuterClass.Movie.MovieData movieData : movieList.getMoviesList()) {
+                        System.out.println("ID: " + movieData.getId());
+                        System.out.println("Plot: " + movieData.getPlot());
+                        System.out.println("Gêneros: " + movieData.getGenresList());
+                        System.out.println("Duração: " + movieData.getRuntime());
+                        System.out.println("Atores: " + movieData.getCastList());
+                        System.out.println("Quantidade de comentários: " + movieData.getNumMflixComments());
+                        System.out.println("Título: " + movieData.getTitle());
+                        System.out.println("Enredo: " + movieData.getFullplot());
+                        System.out.println("Países: " + movieData.getCountriesList());
+                        System.out.println("Data de lançamento: " + movieData.getReleased());
+                        System.out.println("Diretores: " + movieData.getDirectorsList());
+                        System.out.println("Rated: " + movieData.getRated());
+                        System.out.println("Ano: " + movieData.getYear());
+                        System.out.println("Tipo: " + movieData.getType());
+                        System.out.println("--------------------------------------------------");
+                    }
+                }
             } else if (command.equals("4")){
-                MovieOuterClass.Movie.Builder request = MovieOuterClass.Movie.newBuilder();
-                request.setOperation("add_movie");
-                MovieOuterClass.Movie.MovieData.Builder movieDataBuilder = createMovieData(reader);
-                request.addMovies(movieDataBuilder.build());
+                MovieOuterClass.MoviesData.Builder movieDataBuilder = createMovieData(reader);
+                MovieOuterClass.Response response = stub.addMovie(movieDataBuilder.build());
+                System.out.println(response.getMessage());
             } else if (command.equals("5")){
-                MovieOuterClass.Movie.Builder request = MovieOuterClass.Movie.newBuilder();
-                request.setOperation("update_movie");
-                MovieOuterClass.Movie.MovieData.Builder movieDataBuilder = createMovieData(reader);
-                request.addMovies(movieDataBuilder.build());
+                MovieOuterClass.MoviesData.Builder request = MovieOuterClass.createMovieData(reader);
+                String movie_id = getUserInput("Digite o id do filme: ", reader);
+                request.setId(movie_id);
+                MovieOuterClass.Response response = stub.updateMovie(request.build());
+                System.out.println(response.getMessage());
             } else if (command.equals("6")){
                 MovieOuterClass.DeleteMovieRequest.Builder request = MovieOuterClass.DeleteMovieRequest.newBuilder();
-                request.setOperation("delete_movie");
                 String movie_id = getUserInput("Digite o id do filme: ", reader);
                 request.setMovieId(movie_id);
+                MovieOuterClass.Response response = stub.deleteMovie(request);
+                System.out.println(response.getMessage());
             } else if (command.equals("7")){
                 channel.shutdown();
                 break;
@@ -121,9 +177,9 @@ public class Client {
     * BufferedReader reader: objeto para ler a entrada do usuário
     * retorna um objeto MovieData
     */
-    public static MovieOuterClass.Movie.MovieData.Builder createMovieData(BufferedReader reader) throws IOException {
+    public static MovieOuterClass.MoviesData.Builder createMovieData(BufferedReader reader) throws IOException {
 
-        MovieOuterClass.Movie.MovieData.Builder movieDataBuilder = MovieOuterClass.Movie.MovieData.newBuilder();
+        MovieOuterClass.MovieData.Builder movieDataBuilder = MovieOuterClass.MoviesData.newBuilder();
         movieDataBuilder.setPlot(getUserInput("Digite o plot do filme: ", reader));
         movieDataBuilder.addAllGenres(Arrays.asList(getUserInput("Digite os gêneros do filme (Separados por vírgula): ", reader).split(",")));
         movieDataBuilder.setRuntime(getIntInput("Digite a duração do filme: ", reader));
