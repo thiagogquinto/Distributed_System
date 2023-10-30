@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+service MovieService {
+  rpc GetMovies (GetMoviesRequest) returns (Movie) {}
+  rpc GetMovieByActor (GetMoviesRequest) returns (Movie) {}
+  rpc GetMovieByGenre (GetMoviesRequest) returns (Movie) {}
+  rpc DeleteMovie (DeleteMovieRequest) returns (Movie) {}
+  rpc UpdateMovie (Movie) returns (Movie) {}
+  rpc AddMovie (Movie) returns (Movie) {}
+}
+
+message GetMoviesRequest {
+  string operation = 1;
+  string parameter = 2;
+}
+
+message DeleteMovieRequest {
+  string operation = 1;
+  string id = 2;
+}
+
+message DeleteMovieResponse {
+  string response = 1;
+}
+
+message UpdateMovieResponse {
+  string response = 1;
+  Movie.MovieData movie = 2;
+}
+
+message Movie {
+  string operation = 1;
+  string response = 2;
+  repeated MovieData movies = 3;
+
+  message MovieData {
+    string id = 1;
+    string plot = 2;
+    repeated string genres = 3;
+    int32 runtime = 4;
+    repeated string cast = 5;
+    int32 num_mflix_comments = 6;
+    string title = 7;
+    string fullplot = 8;
+    repeated string countries = 9;
+    string released = 10;
+    repeated string directors = 11;
+    string rated = 12;
+    string lastupdated = 13;
+    string year = 14;
+    string type = 15;
+  }
+}
