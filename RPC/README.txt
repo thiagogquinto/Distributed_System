@@ -2,6 +2,11 @@ python3 -m grpc_tools.protoc -I../ --python_out=. --grpc_python_out=. ../movie.p
 protoc --java_out=. --proto_path=../ ../movie.proto
 protoc -I. --java_out=. --grpc_out=. --plugin=protoc-gen-grpc=/usr/local/bin/protoc-gen-grpc-java exemplo.proto
 
+mvn clean
+mvn compile
+mvn exec:java -D"exec.mainClass"="Client"
+
+
 Como compilar:
 
     Primeiramente, certifique-se que está no diretório javacode e execute o seguinte comando:

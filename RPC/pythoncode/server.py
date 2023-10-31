@@ -17,17 +17,6 @@ client = MongoClient(uri)
 db = client.get_database('sample_mflix')
 movies_collection = db.movies
 
-# Cria um socket TCP
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Liga o socket ao endereço e porta especificados
-server_socket.bind((HOST, PORT))
-
-# Habilita o socket para aceitar conexões
-server_socket.listen()
-
-print(f"Servidor escutando em {HOST}:{PORT}...")
-
 class MovieService(movie_pb2_grpc.MovieServiceServicer):
 
     def handleRequest(self, request):
