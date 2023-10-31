@@ -22,16 +22,16 @@ public class Client {
             String command = reader.readLine();
 
             if(command.equals("1")){
-                MovieOuterClass.GetMoviesRequest.Builder request = MovieOuterClass.GetMoviesRequest.newBuilder();
+                Movie.GetMoviesRequest.Builder request = Movie.GetMoviesRequest.newBuilder();
                 request.setOperation("get_movies");
                 request.setParameter("todos");
-                MovieOuterClass.GetMoviesResponse response = stub.getMovies(request);
-                MovieOuterClass.MovieList movieList = response.getMoviesList();
+                Movie.GetMoviesResponse response = stub.getMovies(request);
+                Movie.MovieList movieList = response.getMoviesList();
 
                if (movieList.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme encontrado");
                 } else {
-                    for (MovieOuterClass.Movie.MovieData movieData : movieList.getMoviesList()) {
+                    for (Movie.MoviesData movieData : movieList) {
                         System.out.println("ID: " + movieData.getId());
                         System.out.println("Plot: " + movieData.getPlot());
                         System.out.println("Gêneros: " + movieData.getGenresList());
@@ -50,18 +50,18 @@ public class Client {
                     }
                 }
             } else if (command.equals("2")){
-                MovieOuterClass.GetMoviesRequest.Builder request = MovieOuterClass.GetMoviesRequest.newBuilder();
+                Movie.GetMoviesRequest.Builder request = Movie.GetMoviesRequest.newBuilder();
                 String actor = getUserInput("Digite o ator: ", reader);
                 request.setOperation("get_movies_by_actor");
                 request.setParameter(actor);
                 GetMoviesResponse response = stub.getMovies(request);
 
-                MovieOuterClass.MovieList movieList = response.getMoviesList();
+                Movie.MovieList movieList = response.getMoviesList();
 
                 if (movieList.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme de " + actor + " encontrado");
                 } else {
-                    for (MovieOuterClass.Movie.MovieData movieData : movieList.getMoviesList()) {
+                    for (Movie.MoviesData movieData : movieList) {
                         System.out.println("ID: " + movieData.getId());
                         System.out.println("Plot: " + movieData.getPlot());
                         System.out.println("Gêneros: " + movieData.getGenresList());
@@ -81,7 +81,7 @@ public class Client {
                 }
 
             } else if (command.equals("3")){
-                MovieOuterClass.GetMoviesRequest.Builder request = MovieOuterClass.GetMoviesRequest.newBuilder();
+                Movie.GetMoviesRequest.Builder request = Movie.GetMoviesRequest.newBuilder();
                 String genre = getUserInput("Digite o gênero: ", reader);
                 request.setOperation("get_movies_by_genre");
                 request.setParameter(genre);
@@ -90,7 +90,7 @@ public class Client {
                 if (movieList.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme de gênero " + genre + " encontrado	");
                 } else {
-                    for (MovieOuterClass.Movie.MovieData movieData : movieList.getMoviesList()) {
+                    for (Movie.MoviesData movieData : movieList) {
                         System.out.println("ID: " + movieData.getId());
                         System.out.println("Plot: " + movieData.getPlot());
                         System.out.println("Gêneros: " + movieData.getGenresList());
@@ -109,20 +109,20 @@ public class Client {
                     }
                 }
             } else if (command.equals("4")){
-                MovieOuterClass.MoviesData.Builder movieDataBuilder = createMovieData(reader);
-                MovieOuterClass.Response response = stub.addMovie(movieDataBuilder.build());
+                Movie.MoviesData.Builder movieDataBuilder = createMovieData(reader);
+                Movie.Response response = stub.addMovie(movieDataBuilder.build());
                 System.out.println(response.getMessage());
             } else if (command.equals("5")){
-                MovieOuterClass.MoviesData.Builder request = MovieOuterClass.createMovieData(reader);
+                Movie.MoviesData.Builder request = Movie.createMovieData(reader);
                 String movie_id = getUserInput("Digite o id do filme: ", reader);
                 request.setId(movie_id);
-                MovieOuterClass.Response response = stub.updateMovie(request.build());
+                Movie.Response response = stub.updateMovie(request.build());
                 System.out.println(response.getMessage());
             } else if (command.equals("6")){
-                MovieOuterClass.DeleteMovieRequest.Builder request = MovieOuterClass.DeleteMovieRequest.newBuilder();
+                Movie.DeleteMovieRequest.Builder request = Movie.DeleteMovieRequest.newBuilder();
                 String movie_id = getUserInput("Digite o id do filme: ", reader);
                 request.setMovieId(movie_id);
-                MovieOuterClass.Response response = stub.deleteMovie(request);
+                Movie.Response response = stub.deleteMovie(request);
                 System.out.println(response.getMessage());
             } else if (command.equals("7")){
                 channel.shutdown();
@@ -177,9 +177,9 @@ public class Client {
     * BufferedReader reader: objeto para ler a entrada do usuário
     * retorna um objeto MovieData
     */
-    public static MovieOuterClass.MoviesData.Builder createMovieData(BufferedReader reader) throws IOException {
+    public static Movie.MoviesData.Builder createMovieData(BufferedReader reader) throws IOException {
 
-        MovieOuterClass.MovieData.Builder movieDataBuilder = MovieOuterClass.MoviesData.newBuilder();
+        Movie.MoviesData.Builder movieDataBuilder = Movie.MoviesData.newBuilder();
         movieDataBuilder.setPlot(getUserInput("Digite o plot do filme: ", reader));
         movieDataBuilder.addAllGenres(Arrays.asList(getUserInput("Digite os gêneros do filme (Separados por vírgula): ", reader).split(",")));
         movieDataBuilder.setRuntime(getIntInput("Digite a duração do filme: ", reader));
