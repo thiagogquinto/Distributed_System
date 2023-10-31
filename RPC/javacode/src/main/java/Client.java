@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
-import com.proto.user.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
  
@@ -25,13 +24,12 @@ public class Client {
                 Movie.GetMoviesRequest.Builder request = Movie.GetMoviesRequest.newBuilder();
                 request.setOperation("get_movies");
                 request.setParameter("todos");
-                Movie.GetMoviesResponse response = stub.getMovies(request);
-                Movie.MovieList movieList = response.getMoviesList();
+                Movie.MovieList response = stub.getMovies(request);
 
                if (movieList.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme encontrado");
                 } else {
-                    for (Movie.MoviesData movieData : movieList) {
+                    for (Movie.MoviesData movieData : response.getMoviesList()) {
                         System.out.println("ID: " + movieData.getId());
                         System.out.println("Plot: " + movieData.getPlot());
                         System.out.println("Gêneros: " + movieData.getGenresList());
@@ -54,14 +52,12 @@ public class Client {
                 String actor = getUserInput("Digite o ator: ", reader);
                 request.setOperation("get_movies_by_actor");
                 request.setParameter(actor);
-                GetMoviesResponse response = stub.getMovies(request);
-
-                Movie.MovieList movieList = response.getMoviesList();
+                Movie.MovieList response = stub.getMovies(request);
 
                 if (movieList.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme de " + actor + " encontrado");
                 } else {
-                    for (Movie.MoviesData movieData : movieList) {
+                    for (Movie.MoviesData movieData : response.getMoviesList()) {
                         System.out.println("ID: " + movieData.getId());
                         System.out.println("Plot: " + movieData.getPlot());
                         System.out.println("Gêneros: " + movieData.getGenresList());
@@ -85,12 +81,12 @@ public class Client {
                 String genre = getUserInput("Digite o gênero: ", reader);
                 request.setOperation("get_movies_by_genre");
                 request.setParameter(genre);
-                GetMoviesResponse response = stub.getMovies(request);
+                Movie.MovieList movieList = response.getMoviesList();
                 
                 if (movieList.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme de gênero " + genre + " encontrado	");
                 } else {
-                    for (Movie.MoviesData movieData : movieList) {
+                    for (Movie.MoviesData movieData : response.getMoviesList()) {
                         System.out.println("ID: " + movieData.getId());
                         System.out.println("Plot: " + movieData.getPlot());
                         System.out.println("Gêneros: " + movieData.getGenresList());
@@ -141,8 +137,6 @@ public class Client {
      * retorna uma string
      */
     private static String getUserInput(String prompt, BufferedReader reader) throws IOException {
-        // antes de retornar o valor lido, deve-se verificar se o usuário digitou algo
-        // (se ele apertou apenas ENTER, por exemplo, não deve retornar uma string vazia)
         while (true) {
             System.out.print(prompt);
             String input = reader.readLine();
