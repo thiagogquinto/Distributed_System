@@ -1,41 +1,32 @@
-python3 -m grpc_tools.protoc -I../ --python_out=. --grpc_python_out=. ../movie.proto
-protoc --java_out=. --proto_path=../ ../movie.proto
-protoc -I. --java_out=. --grpc_out=. --plugin=protoc-gen-grpc=/usr/local/bin/protoc-gen-grpc-java exemplo.proto
-
-mvn clean
-mvn compile
-mvn exec:java -D"exec.mainClass"="Client"
-
+Geração de arquivos:
+    Para gerar os arquivos necessários tanto para o servidor quanto para o cliente, execute os seguintes comandos:
+        make generate_python
+        make maven_build
 
 Como compilar:
-
-    Primeiramente, certifique-se que está no diretório javacode e execute o seguinte comando:
+    Primeiramente, certifique-se que está no diretório RPC e execute os seguinte comandos:
     
-    javac -classpath .:protobuf-java-3.24.4.jar Client.java
-
 Como executar:
 
-Antes de executar o servidor é necessário instalar alguns módulos, para isso execute o seguinte comando:
-    pip install google protobuf bson pymongo
-
-Para executar o servidor é necessário estar no diretório pythoncode, execute o seguinte comando:
-    python3 server.py
-
-Para executar o cliente é necessário estar no diretório javacode, execute o seguinte comando:
-    java -classpath .:protobuf-java-3.24.4.jar Client
-
+    Primeiramente, certifique-se que está no diretório RPC e execute os seguinte comandos:
+        make server_run
+        make client_run
 
 Bibliotecas usadas:
     Bibliotecas servidor:
-        import socket
-        import movie_pb2 
-        from bson import ObjectId
-        from pymongo import MongoClient
+        socket
+        grpc
+        bson  
+        concurrent  
+        datetime  
+        pymongo  
         
     Bibliotecas cliente:
-        import java.io.*;
-        import java.net.*;
-        import java.util.Arrays;
+        java.io.*;
+        java.net.*;
+        java.util.Arrays;
+        io.grpc.ManagedChannel;
+        io.grpc.ManagedChannelBuilder;
 
 Exemplos de uso:
 

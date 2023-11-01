@@ -15,8 +15,7 @@ message GetMoviesRequest {
 }
 
 message DeleteMovieRequest {
-  string operation = 1;
-  string id = 2;
+  string id = 1;
 }
 
 message Response {

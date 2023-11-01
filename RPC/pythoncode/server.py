@@ -1,3 +1,13 @@
+"""
+Código do servidor em gRPC que realiza as operações CRUD no banco de dados MongoDB. De acordo com a operação solicitada
+pelo cliente, o servidor realiza a operação no banco de dados e retorna uma resposta ao cliente.
+
+Autores: Thiago Gariani Quinto e Marcos Vinicius de Quadros
+
+Data de criação: 28/10/2023
+Datas de modificação: 29/10/2023, 30/10/2023, 31/10/2023
+"""
+
 import socket
 import movie_pb2 
 import movie_pb2_grpc
@@ -22,9 +32,9 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
     def handleRequest(self, request):
         if request.operation == "get_movies":
             return self.GetMovies(request)
-        elif request.operation == "get_movie_by_actor":
+        elif request.operation == "get_movies_by_actor":
             return self.GetMovieByActor(request)
-        elif request.operation == "get_movie_by_genre":
+        elif request.operation == "get_movies_by_genre":
             return self.GetMovieByGenre(request)
         elif request.operation == "delete_movie":
             return self.DeleteMovie(request)
@@ -34,117 +44,156 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
             return self.AddMovie(request)
         else:
             return movie_pb2.Empty()
+        
+    """
+    Função que retorna todos os filmes do banco de dados e retorna uma lista de filmes ao cliente.
+    """
 
     def GetMovies(self, request, context):
 
+        print("Buscando filmes...")
         movies = movies_collection.find({}, {"imdb":0, "tomatoes":0, "awards":0})
         response = movie_pb2.MovieList()
 
         for movie in movies:
             response.movies.append(movie_pb2.MoviesData(
                 id=str(movie['_id']),
-                plot=movie['plot'],
-                genres=movie['genres'],
-                runtime=movie['runtime'],
-                cast=movie['cast'],
-                num_mflix_comments=movie['num_mflix_comments'],
-                title=movie['title'],
-                fullplot=movie['fullplot'],
-                countries=movie['countries'],
-                released=movie['released'].strftime('%Y-%m-%d'),
-                directors=movie['directors'],
-                rated=movie['rated'],
-                lastupdated=movie['lastupdated'].strftime('%Y-%m-%d %H:%M:%S'),
-                year=movie['year'],
-                type=movie['type']
+                plot=movie.get('plot', ""),
+                genres=movie.get('genres', []),
+                runtime=movie.get('runtime', 0),
+                cast=movie.get('cast', []),
+                num_mflix_comments=movie.get('num_mflix_comments', 0),
+                title=movie.get('title', ""),
+                fullplot=movie.get('fullplot', ""),
+                countries=movie.get('countries', []),
+                released=str(movie.get('released', "")),
+                directors=movie.get('directors', []),
+                rated=movie.get('rated', ""),
+                lastupdated=movie.get('lastupdated', ""),
+                year=str(movie.get('year', "")),
+                type=movie.get('type', "")
             ))
+
+        print("Enviando filmes...")
 
         return response
     
+    """
+    Função que retorna todos os filmes de um determinado ator e retorna uma lista de filmes ao cliente.
+    """
     def GetMovieByActor(self, request, context):
-        movies = movies_collection.find({"cast": request.actor}, {"imdb":0, "tomatoes":0, "awards":0})
+
+        print("Buscando filmes de " + request.parameter + "...")
+        movies = movies_collection.find({"cast": request.parameter}, {"imdb":0, "tomatoes":0, "awards":0})
         response = movie_pb2.MovieList()
 
         for movie in movies:
             response.movies.append(movie_pb2.MoviesData(
                 id=str(movie['_id']),
-                plot=movie['plot'],
-                genres=movie['genres'],
-                runtime=movie['runtime'],
-                cast=movie['cast'],
-                num_mflix_comments=movie['num_mflix_comments'],
-                title=movie['title'],
-                fullplot=movie['fullplot'],
-                countries=movie['countries'],
-                released=movie['released'].strftime('%Y-%m-%d'),
-                directors=movie['directors'],
-                rated=movie['rated'],
-                lastupdated=movie['lastupdated'].strftime('%Y-%m-%d %H:%M:%S'),
-                year=movie['year'],
-                type=movie['type']
+                plot=movie.get('plot', ""),
+                genres=movie.get('genres', []),
+                runtime=movie.get('runtime', 0),
+                cast=movie.get('cast', []),
+                num_mflix_comments=movie.get('num_mflix_comments', 0),
+                title=movie.get('title', ""),
+                fullplot=movie.get('fullplot', ""),
+                countries=movie.get('countries', []),
+                released=str(movie.get('released', "")),
+                directors=movie.get('directors', []),
+                rated=movie.get('rated', ""),
+                lastupdated=movie.get('lastupdated', ""),
+                year=str(movie.get('year', "")),
+                type=movie.get('type', "")
             ))
+
+        print("Enviando filmes...")
 
         return response
 
+    """
+    Função que retorna todos os filmes de um determinado gênero e retorna uma lista de filmes ao cliente.
+    """
     def GetMovieByGenre(self, request, context):
-        movies = movies_collection.find({"genres": request.genre}, {"imdb":0, "tomatoes":0, "awards":0})
+
+        print("Buscando filmes de gênero " + request.parameter + "...")
+        movies = movies_collection.find({"genres": request.parameter}, {"imdb":0, "tomatoes":0, "awards":0})
         response = movie_pb2.MovieList()
 
         for movie in movies:
             response.movies.append(movie_pb2.MoviesData(
                 id=str(movie['_id']),
-                plot=movie['plot'],
-                genres=movie['genres'],
-                runtime=movie['runtime'],
-                cast=movie['cast'],
-                num_mflix_comments=movie['num_mflix_comments'],
-                title=movie['title'],
-                fullplot=movie['fullplot'],
-                countries=movie['countries'],
-                released=movie['released'].strftime('%Y-%m-%d'),
-                directors=movie['directors'],
-                rated=movie['rated'],
-                lastupdated=movie['lastupdated'].strftime('%Y-%m-%d %H:%M:%S'),
-                year=movie['year'],
-                type=movie['type']
+                plot=movie.get('plot', ""),
+                genres=movie.get('genres', []),
+                runtime=movie.get('runtime', 0),
+                cast=movie.get('cast', []),
+                num_mflix_comments=movie.get('num_mflix_comments', 0),
+                title=movie.get('title', ""),
+                fullplot=movie.get('fullplot', ""),
+                countries=movie.get('countries', []),
+                released=str(movie.get('released', "")),
+                directors=movie.get('directors', []),
+                rated=movie.get('rated', ""),
+                lastupdated=movie.get('lastupdated', ""),
+                year=str(movie.get('year', "")),
+                type=movie.get('type', "")
             ))
 
+        print("Enviando filmes...")
         return response
     
+    """
+    Função que deleta um filme do banco de dados e retorna uma resposta ao cliente informando se o filme foi deletado ou não.
+    """
     def DeleteMovie(self, request, context):
-        result = movies_collection.delete_one({"_id": ObjectId(request.id)})
 
-        if result.deleted_count == 1:
-            return movie_pb2.Response(message="Filme deletado com sucesso!")
+        if ObjectId.is_valid(request.id) == False: 
+            return movie_pb2.Response(response="ID inválido!")
         else:
-            return movie_pb2.Response(message="Filme não encontrado!") 
+            result = movies_collection.delete_one({"_id": ObjectId(request.id)})
 
+            if result.deleted_count == 1:
+                return movie_pb2.Response(response="Filme deletado com sucesso!")
+            else:
+                return movie_pb2.Response(response="Filme não encontrado!") 
+            
+
+    """
+    Função que atualiza um filme do banco de dados e retorna uma resposta ao cliente informando se o filme foi atualizado ou não.
+    """
     def UpdateMovie(self, request, context):
 
-        updated_movie = {
-            "plot": request.plot, 
-            "genres": list(request.genres),  
-            "runtime": request.runtime, 
-            "cast": list(request.cast), 
-            "num_mflix_comments": request.num_mflix_comments,  
-            "title": request.title, 
-            "fullplot": request.fullplot, 
-            "countries": list(request.countries), 
-            "released": datetime.strptime(request.released, '%Y-%m-%d'), 
-            "directors": list(request.directors), 
-            "rated": request.rated, 
-            "lastupdated": datetime.strptime(request.lastupdated, '%Y-%m-%d %H:%M:%S'), 
-            "year": request.year, 
-            "type": request.type, 
-        }
+        lstupdt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        result = movies_collection.update_one({"_id": ObjectId(request.id)}, {"$set": updated_movie})
-
-        if result.modified_count == 1:
-            return movie_pb2.Response(message="Filme atualizado com sucesso!")
+        if ObjectId.is_valid(request.id) == False:
+            return movie_pb2.Response(response="ID inválido!")
         else:
-            return movie_pb2.Response(message="Filme não encontrado!")
+            updated_movie = {
+                "plot": request.plot, 
+                "genres": list(request.genres),  
+                "runtime": request.runtime, 
+                "cast": list(request.cast), 
+                "num_mflix_comments": request.num_mflix_comments,  
+                "title": request.title, 
+                "fullplot": request.fullplot, 
+                "countries": list(request.countries), 
+                "released": request.released,
+                "directors": list(request.directors), 
+                "rated": request.rated, 
+                "lastupdated": lstupdt,
+                "year": request.year, 
+                "type": request.type, 
+            }
 
+            result = movies_collection.update_one({"_id": ObjectId(request.id)}, {"$set": updated_movie})
+
+            if result.modified_count == 1:
+                return movie_pb2.Response(response="Filme atualizado com sucesso!")
+            else:
+                return movie_pb2.Response(response="Filme não encontrado!")
+
+    """
+    Função que adiciona um filme no banco de dados e retorna uma resposta ao cliente informando se o filme foi adicionado ou não.
+    """
     def AddMovie(self, request, context):
 
         movie_data = {
@@ -167,12 +216,12 @@ class MovieService(movie_pb2_grpc.MovieServiceServicer):
         result = movies_collection.insert_one(movie_data)
 
         if result.inserted_id:
-            return movie_pb2.Response(message="Filme adicionado com sucesso! - ID: " + str(result.inserted_id))
+            return movie_pb2.Response(response="Filme adicionado com sucesso! - ID: " + str(result.inserted_id))
         else:
-            return movie_pb2.Response(message="Erro ao adicionar filme!")
+            return movie_pb2.Response(response="Erro ao adicionar filme!")
         
 def main():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[('grpc.max_send_message_length', 1024 * 1024 * 1024), ('grpc.max_receive_message_length', 1024 * 1024 * 1024)])
     movie_pb2_grpc.add_MovieServiceServicer_to_server(MovieService(), server)
     server.add_insecure_port('[::]:12345')
     server.start()

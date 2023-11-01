@@ -1,3 +1,13 @@
+/**
+ * Código do cliente que se comunica com o servidor através do gRPC para realizar as operações do CRUD de filmes
+ * da base de dados mflix. O cliente recebe os dados do usuário e envia para o servidor através do gRPC.
+ * 
+ * Autores: Thiago Gariani Quinto e Marcos Vinicius de Quadros
+ * 
+ * Data de criação: 28/10/2023
+ * Datas de modificação: 29/10/2023, 30/10/2023, 31/10/2023
+ */
+
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
@@ -10,7 +20,7 @@ public class Client {
         String host = "localhost";
         int port = 12345;
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().maxInboundMessageSize(1024 * 1024 * 1024).build();
         MovieServiceGrpc.MovieServiceBlockingStub stub = MovieServiceGrpc.newBlockingStub(channel);
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -22,9 +32,6 @@ public class Client {
 
             if(command.equals("1")){
                 Movie.GetMoviesRequest request = Movie.GetMoviesRequest.newBuilder().setOperation("get_movies").setParameter("todos").build();
-                // Movie.GetMoviesRequest.Builder request = Movie.GetMoviesRequest.newBuilder();
-                // request.setOperation("get_movies");
-                // request.setParameter("todos");
                 Movie.MovieList response = stub.getMovies(request);
 
                if (response.getMoviesCount() == 0) {
@@ -49,12 +56,9 @@ public class Client {
                     }
                 }
             } else if (command.equals("2")){
-                // Movie.GetMoviesRequest.Builder request = Movie.GetMoviesRequest.newBuilder();
                 String actor = getUserInput("Digite o ator: ", reader);
                 Movie.GetMoviesRequest request = Movie.GetMoviesRequest.newBuilder().setOperation("get_movies_by_actor").setParameter(actor).build();
-                // request.setOperation("get_movies_by_actor");
-                // request.setParameter(actor);
-                Movie.MovieList response = stub.getMovies(request);
+                Movie.MovieList response = stub.getMovieByActor(request);
 
                 if (response.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme de " + actor + " encontrado");
@@ -79,15 +83,10 @@ public class Client {
                 }
 
             } else if (command.equals("3")){
-                // Movie.GetMoviesRequest.Builder request = Movie.GetMoviesRequest.newBuilder();
-                // request.setOperation("get_movies_by_genre");
-                // request.setParameter(genre);
                 String genre = getUserInput("Digite o gênero: ", reader);
                 Movie.GetMoviesRequest request = Movie.GetMoviesRequest.newBuilder().setOperation("get_movies_by_genre").setParameter(genre).build();
-                Movie.MovieList response = stub.getMovies(request);
+                Movie.MovieList response = stub.getMovieByGenre(request);
 
-                // Movie.MovieList movieList = response.getMoviesList();
-                
                 if (response.getMoviesCount() == 0) {
                     System.out.println("Nenhum filme de gênero " + genre + " encontrado	");
                 } else {
@@ -120,10 +119,8 @@ public class Client {
                 Movie.Response response = stub.updateMovie(request.build());
                 System.out.println(response.getResponse());
             } else if (command.equals("6")){
-                // Movie.DeleteMovieRequest.Builder request = Movie.DeleteMovieRequest.newBuilder();
                 String movie_id = getUserInput("Digite o id do filme: ", reader);
                 Movie.DeleteMovieRequest request = Movie.DeleteMovieRequest.newBuilder().setId(movie_id).build();
-                // request.setId(movie_id);
                 Movie.Response response = stub.deleteMovie(request);
                 System.out.println(response.getResponse());
             } else if (command.equals("7")){
