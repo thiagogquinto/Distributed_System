@@ -9,14 +9,16 @@ import com.rabbitmq.client.*;
 public class Classifier {
 
     // Função para receber mensagens do RabbitMQ e retornar uma String com a mensagem
-    public static String receiveMessage(String queueName) {
+    public static String receiveMessage(String exchangeName, String routingKey) {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost"); // replace with your host if not localhost
         final String[] message = new String[1];
     
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
-            channel.queueDeclare(queueName, true, false, false, null);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, exchangeName, routingKey);
+            // channel.queueDeclare(queueName, true, false, false, null);
             DefaultConsumer consumer = new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
@@ -46,7 +48,7 @@ public class Classifier {
     }
 
     public void teste() {
-        String content = receiveMessage("topic");
+        String content = receiveMessage("tweets_exchange", "tweets");
 
         if (content == null) {
             System.out.println("\n\nNenhuma mensagem recebida\n\n");
