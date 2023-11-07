@@ -2,13 +2,16 @@
 import pika
 import questionary
 
-topics = ['volleyball', 'football'] # tópicos disponíveis
+topics = ['basketball', 'football'] # tópicos disponíveis
 
 # perguntando ao usuário qual tópico deseja assinar
-subscribed = questionary.select(
-    "Which topic do you want to subscribe to?",
-    choices=topics
+subscribed = questionary.checkbox(
+    "Em quais tópicos você deseja se inscrever?",
+    choices=topics,
+    instruction="Use as setas para navegar, <espaço> para selecionar, <a> para alternar, <i> para inverter"
 ).ask()
+
+print("Tópicos nos quais você se inscreveu:", subscribed)
 
 # conectando ao RabbitMQ
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))

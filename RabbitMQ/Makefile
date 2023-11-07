@@ -1,2 +1,4 @@
-js_deps:
-	npm install csv csv-parser
+setup: 
+	npm install csv csv-parser amqplib
+	pip install pika questionary
+
