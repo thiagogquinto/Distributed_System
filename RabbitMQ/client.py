@@ -1,6 +1,26 @@
 
+
+"""
+Código python que permite ao usuário se inscrever em tópicos do RabbitMQ e receber mensagens deles. Para selecionar o tópico de interesse, 
+é solicitado ao usuário que selecione os tópicos disponíveis. O script então se conecta ao RabbitMQ, cria um canal, declara uma exchange do tipo topic,
+cria uma fila para o cliente, faz o bind da fila com a exchange usando os tópicos selecionados e começa a consumir as mensagens da fila.
+
+Autores: Thiago Gariani Quinto e Marcos Vinicius de Quadros
+
+Data de criação: 04/11/2023
+Datas de atualização: 05/11/2023, 07/11/2023, 08/11/2023
+"""
 import pika
 import questionary
+import json
+
+"""
+Função que é chamada quando uma mensagem é recebida. Ela imprime o autor e o conteúdo da mensagem.
+"""
+def callback(ch, method, properties, body):
+    content = json.loads(body.decode('utf-8'))
+    print(content['name'] )
+    print(content['text'] + "\n\n")
 
 topics = ['basketball', 'football'] # tópicos disponíveis
 

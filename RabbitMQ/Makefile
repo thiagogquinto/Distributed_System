@@ -5,5 +5,9 @@ setup:
 maven_build:
 	mvn clean && mvn compile 
 
-collector_run:
+run_server:
 	mvn exec:java -D"exec.mainClass"="Collector"
+	node classifier.js
+
+run_client:
+	python3 client.py
