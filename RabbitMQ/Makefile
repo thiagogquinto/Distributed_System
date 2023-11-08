@@ -5,6 +5,5 @@ setup:
 maven_build:
 	mvn clean && mvn compile 
 
-class_run:
-	node collector.js
-	mvn exec:java -D"exec.mainClass"="Classifier"
+collector_run:
+	mvn exec:java -D"exec.mainClass"="Collector"
