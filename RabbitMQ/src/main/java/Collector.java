@@ -44,7 +44,11 @@ public class Collector {
             CSVReader reader = new CSVReaderBuilder(new FileReader("src/main/resources/tweets_data.csv")).build();
             String[] nextLine;
 
+            int totalLines = countLines("src/main/resources/tweets_data.csv");
+
             while((nextLine = reader.readNext()) != null) {
+
+                System.out.println("Lendo linha " + reader.getLinesRead() + " de " + totalLines);
                 JSONObject tweet = new JSONObject();
                 tweet.put("name", nextLine[14]);
                 tweet.put("text", nextLine[19]);
@@ -62,8 +66,22 @@ public class Collector {
 
     }
 
+    public int countLines(String filename) {
+        int lines = 0;
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            while (reader.readLine() != null) lines++;
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lines;
+    }
+
+
     public static void main(String[] args) {
         Collector collector = new Collector();
         collector.readCsvFile();
     }
+
 }
