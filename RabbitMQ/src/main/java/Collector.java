@@ -28,8 +28,8 @@ public class Collector {
         try(Connection connection = factory.newConnection();
             Channel channel = connection.createChannel()) {
             
-            channel.exchangeDeclare("tweets_exchange", "direct", true);
-            channel.queueDeclare("tweets_queue", true, false, false, null);
+            channel.exchangeDeclare("tweets_exchange", "direct", false); 
+            channel.queueDeclare("tweets_queue", false, false, false, null);
             channel.queueBind("tweets_queue", "tweets_exchange", "tweets");
             channel.basicPublish("tweets_exchange", "tweets", null, data.toString().getBytes(StandardCharsets.UTF_8));
 

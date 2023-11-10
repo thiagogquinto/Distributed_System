@@ -43,8 +43,8 @@ function consumeFromRabbitMQ() {
             const exchange = 'tweets_exchange'; // nome da exchange
             const queue = 'tweets_queue'; // nome da fila
 
-            channel.assertExchange(exchange, 'direct', { durable: true });
-            channel.assertQueue(queue, { durable: true });
+            channel.assertExchange(exchange, 'direct', { durable: false });
+            channel.assertQueue(queue, { durable: false });
             channel.bindQueue(queue, exchange, 'tweets'); // bind da fila com a exchange - chave 'tweets'
 
             channel.consume(queue, (message) => {
