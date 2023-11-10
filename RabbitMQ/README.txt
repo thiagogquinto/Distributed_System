@@ -1,4 +1,3 @@
-
 Como compilar:
     Primeiramente, certifique-se que está no diretório RabbitMQ e execute os seguinte comandos:
         make maven_build
@@ -34,5 +33,5 @@ Exemplos de uso:
         » ○ basketball
           ○ football
 
-    Dessa forma, abste seguir a instrução e selecionar os tópico de interesse. Uma vez que isso for feito, o cliente receberá as mensagens
+    Dessa forma, basta seguir a instrução e selecionar os tópicos de interesse. Uma vez que isso for feito, o cliente receberá as mensagens
     que forem enviadas para os tópicos selecionados.

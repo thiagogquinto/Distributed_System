@@ -8,7 +8,7 @@ cria uma fila para o cliente, faz o bind da fila com a exchange usando os tópic
 Autores: Thiago Gariani Quinto e Marcos Vinicius de Quadros
 
 Data de criação: 04/11/2023
-Datas de atualização: 05/11/2023, 07/11/2023, 08/11/2023
+Datas de atualização: 05/11/2023, 07/11/2023, 08/11/2023, 10/11/2023
 """
 import pika
 import questionary

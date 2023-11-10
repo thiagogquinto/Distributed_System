@@ -2,6 +2,8 @@
  * Código responsável por coletar os tweets e enviar para a fila do RabbitMQ
  * Autores: Marcos Vinicius de Quadros e Thiago Gariani Quinto
  * Data de criação: 08/11/2023
+ * Data de modificações: 10//11/2023
+ *
  */
 
 import java.io.*;
@@ -19,11 +21,20 @@ public class Collector {
 
     private ConnectionFactory factory;
 
+    /**
+     * Construtor da classe Collector que inicializa a conexão com o RabbitMQ 
+     * 
+     */
     public Collector() {
         factory = new ConnectionFactory();
         factory.setHost("localhost");
     }
 
+    /**
+     * Método responsável por enviar os tweets coletados para a fila do RabbitMQ 
+     * 
+     * @param data tweet coletado
+     */
     public void sendToRabbitMQ(JSONObject data) {
         try(Connection connection = factory.newConnection();
             Channel channel = connection.createChannel()) {
@@ -39,6 +50,9 @@ public class Collector {
 
     }
 
+    /**
+     * Método responsável por ler o arquivo csv e chamar o método sendToRabbitMQ para enviar os tweets para a fila do RabbitMQ
+     */
     public void readCsvFile() {
         try {
             CSVReader reader = new CSVReaderBuilder(new FileReader("src/main/resources/tweets_data.csv")).build();
@@ -66,6 +80,11 @@ public class Collector {
 
     }
 
+    /**
+     * Método responsável por contar o número de linhas do arquivo csv
+     * 
+     * @return número de linhas do arquivo csv
+     */
     public int countLines(String filename) {
         int lines = 0;
         try {

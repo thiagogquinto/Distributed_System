@@ -6,7 +6,7 @@
  * @author Thiago Gariani Quinto
  * @author Marcos Vinicius de Quadros
  * @since 04/11/2023
- * @updates 05/11/2023, 07/11/2023, 08/11/2023
+ * @updates 05/11/2023, 07/11/2023, 08/11/2023, 10/11/2023
  */
 
 const fs = require('fs');
@@ -59,7 +59,8 @@ function consumeFromRabbitMQ() {
 
 /**
  * função que verifica se o tweet em questão contém alguma palavra chave relacionada ao futebol ou basquete,
- * se sim, envia para o RabbitMQ informando qual o tópico do tweet
+ * se sim, chama a função sendToRabbitMQ para enviar o tweet para a fila do RabbitMQ específica do tópico
+ * 
  * @param {dado do tweet} content 
  */
 function hasTopic(content) {
@@ -81,8 +82,9 @@ function hasTopic(content) {
 
 /**
  * envia a mensagem para a fila do RabbitMQ relacinada ao tópico do tweet, senda consumida pelos clientes posteriormente
- * @param {dadodo tweet} data 
- * @param {indica qual o tópico do data} topic 
+ * 
+ * @param {dado do tweet} data 
+ * @param {indica qual o tópico do tweet} topic 
  */
 function sendToRabbitMQ(data, topic) {
 
