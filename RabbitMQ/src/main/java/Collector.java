@@ -17,15 +17,19 @@ import com.opencsv.exceptions.CsvValidationException;
 
 public class Collector {
 
-    public void sendToRabbitMQ(JSONObject data) {
+    private ConnectionFactory factory;
 
-        ConnectionFactory factory = new ConnectionFactory();
+    public Collector() {
+        factory = new ConnectionFactory();
         factory.setHost("localhost");
+    }
 
-        // Tenta criar uma conexão com o RabbitMQ e enviar a mensagem
+    public void sendToRabbitMQ(JSONObject data) {
         try(Connection connection = factory.newConnection();
             Channel channel = connection.createChannel()) {
-
+            
+            channel.exchangeDeclare("tweets_exchange", "direct", true);
+            channel.queueDeclare("tweets_queue", true, false, false, null);
             channel.queueBind("tweets_queue", "tweets_exchange", "tweets");
             channel.basicPublish("tweets_exchange", "tweets", null, data.toString().getBytes(StandardCharsets.UTF_8));
 
