@@ -9,3 +9,7 @@
 *.jpeg
 *.pdf
 /RPC/javacode/target/
+*.csv
+*/node_modules/
+*.json
+/RabbitMQ/target/
